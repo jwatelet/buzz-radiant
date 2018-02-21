@@ -9,3 +9,5 @@ Create access token for your account, copy access token and access token secret.
 Copy `src/main/resources/application.conf.template` to `src/main/resources/application.conf` and fill in above keys/tokens/secrets.
 
 Run with `sbt run`
+
+Use `ws://localhost:8000/tweets` to gets tweets in WebSocket
