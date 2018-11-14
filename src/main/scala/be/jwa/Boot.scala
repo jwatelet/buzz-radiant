@@ -23,7 +23,7 @@ object Boot extends App {
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val timeout: Timeout = Timeout(20.seconds)
   implicit val tweetActor: ActorRef = system.actorOf(TweetActor.props())
-  val listenedHashtags = Seq("#WOW", "#Warcraft")
+  val listenedHashtags = Seq("#warcraft", "#Blizzard" , "#BFA", "#wow", "#wowclassic")
   val twitterSource: Source[Tweet, NotUsed] = TwitterSource.source(Config(ConfigFactory.load()), listenedHashtags)
 
   val graph: RunnableGraph[NotUsed] = RunnableGraph.fromGraph(GraphDSL.create() { implicit builder =>
