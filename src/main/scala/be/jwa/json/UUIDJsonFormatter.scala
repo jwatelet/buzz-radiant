@@ -4,7 +4,7 @@ import java.util.UUID
 
 import spray.json.{DeserializationException, JsString, JsValue, JsonFormat}
 
-trait UUIDJsonFormater {
+trait UUIDJsonFormatter {
 
   implicit object UuidJsonFormat extends JsonFormat[UUID] {
     def write(x: UUID) = JsString(x.toString)

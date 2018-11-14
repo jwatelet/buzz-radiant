@@ -49,7 +49,6 @@ object TwitterSource {
       .authentication(auth)
       .processor(new StringDelimitedProcessor(queue))
       .build()
-
     val numProcessingThreads = 4
     val service = Executors.newFixedThreadPool(numProcessingThreads)
 
@@ -57,7 +56,6 @@ object TwitterSource {
       client, queue, Lists.newArrayList(listener(streamEntry)), service)
 
     t4jClient.connect()
-
     for (_: Int <- 0 to numProcessingThreads) {
       t4jClient.process()
     }
@@ -65,6 +63,7 @@ object TwitterSource {
 
   private def listener(streamEntry: ActorRef) = new StatusStreamHandler() {
     override def onStatus(status: Status) {
+
       val userName: String = status.getUser.getName
       val tweetText: String = status.getText
       val placeName: Option[String] = if (status.getPlace != null) Some(status.getPlace.getName) else None
