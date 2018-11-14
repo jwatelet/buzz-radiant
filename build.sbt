@@ -6,12 +6,8 @@ scalaVersion := "2.12.4"
 
 enablePlugins(DockerPlugin)
 
-
-Compile/mainClass := Some("be.jwa.Boot")
-
-
 libraryDependencies ++= {
-  val akkaV = "10.1.5"
+  val akkaV = "10.0.11"
   Seq(
     "com.typesafe.akka" %% "akka-http" % akkaV,
     "com.typesafe.akka" %% "akka-http-spray-json" % akkaV,

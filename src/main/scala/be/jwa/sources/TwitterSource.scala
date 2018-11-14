@@ -1,6 +1,5 @@
 package be.jwa.sources
 
-import java.util.UUID
 import java.util.concurrent.{Executors, LinkedBlockingQueue}
 
 import akka.NotUsed
@@ -22,7 +21,7 @@ import twitter4j.{StallWarning, Status, StatusDeletionNotice}
 import scala.collection.JavaConverters._
 import scala.concurrent.Future
 
-case class Tweet(id : UUID, userName: String, tweetText: String, placeName: Option[String], hashTags: Seq[String])
+case class Tweet(userName: String, tweetText: String, placeName: Option[String], hashTags: Seq[String])
 
 object TwitterSource {
   def source(config: Config, hashtags: Seq[String])(implicit fm: Materializer, system: ActorSystem): Source[Tweet, NotUsed] = {
@@ -69,23 +68,23 @@ object TwitterSource {
       val tweetText: String = status.getText
       val placeName: Option[String] = if (status.getPlace != null) Some(status.getPlace.getName) else None
       val hashTags: Seq[String] = status.getHashtagEntities.toSeq.map(ht => ht.getText.toLowerCase)
-      streamEntry ! Tweet(UUID.randomUUID(), userName, tweetText, placeName, hashTags)
+      streamEntry ! Tweet(userName, tweetText, placeName, hashTags)
     }
 
     override def onDeletionNotice(statusDeletionNotice: StatusDeletionNotice): Unit = {}
 
-    override def onTrackLimitationNotice(limit: Int): Unit = {}
+    override def onTrackLimitationNotice(limit: Int) = {}
 
-    override def onScrubGeo(user: Long, upToStatus: Long): Unit = {}
+    override def onScrubGeo(user: Long, upToStatus: Long) = {}
 
-    override def onStallWarning(warning: StallWarning): Unit = {}
+    override def onStallWarning(warning: StallWarning) = {}
 
-    override def onException(e: Exception): Unit = {}
+    override def onException(e: Exception) = {}
 
-    override def onDisconnectMessage(message: DisconnectMessage): Unit = {}
+    override def onDisconnectMessage(message: DisconnectMessage) = {}
 
-    override def onStallWarningMessage(warning: StallWarningMessage): Unit = {}
+    override def onStallWarningMessage(warning: StallWarningMessage) = {}
 
-    override def onUnknownMessageType(s: String): Unit = {}
+    override def onUnknownMessageType(s: String) = {}
   }
 }
