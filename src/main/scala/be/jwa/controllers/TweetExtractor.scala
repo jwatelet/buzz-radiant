@@ -5,7 +5,7 @@ import twitter4j.{Status, User}
 
 case class Tweet(id: Long, user: TwitterUser, tweetText: String, placeName: Option[String], hashTags: Seq[String])
 
-case class TwitterUser(id: Long, name: String, lang: String, followersCount: Int, friendsCount: Int, description: String)
+case class TwitterUser(id: Long, name: String, lang: String, followersCount: Int, friendsCount: Int, description: Option[String])
 
 trait TweetExtractor {
 
@@ -29,7 +29,7 @@ trait TweetExtractor {
     val followersCount: Int = user.getFollowersCount
     val friendsCount: Int = user.getFriendsCount
     val description: String = user.getDescription
-    TwitterUser(id, name, lang, followersCount, friendsCount, description)
+    TwitterUser(id, name, lang, followersCount, friendsCount, Option(description))
   }
 
 }
