@@ -42,9 +42,9 @@ class TwitterActor extends Actor {
       sender() ! tweetBuffer
 
     case GetUsers =>
-      sender() ! tweetBuffer.map(tweet => tweet.user)
+      sender() ! tweetBuffer.map(tweet => tweet.user).toSet
 
     case GetUsersCount =>
-      sender() ! TwitterUserCount(tweetBuffer.map(tweet => tweet.user).length)
+      sender() ! TwitterUserCount(tweetBuffer.map(tweet => tweet.user).toSet.size)
   }
 }
