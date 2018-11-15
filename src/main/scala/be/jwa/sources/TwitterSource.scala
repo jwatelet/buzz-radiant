@@ -8,6 +8,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.{BroadcastHub, Keep, Source}
 import akka.stream.{Materializer, OverflowStrategy}
 import be.jwa.Config
+import be.jwa.controllers.{Tweet, TweetExtractor}
 import com.google.common.collect.Lists
 import com.twitter.hbc.ClientBuilder
 import com.twitter.hbc.core.Constants
@@ -22,9 +23,8 @@ import twitter4j.{StallWarning, Status, StatusDeletionNotice}
 import scala.collection.JavaConverters._
 import scala.concurrent.Future
 
-case class Tweet(id : UUID, userName: String, tweetText: String, placeName: Option[String], hashTags: Seq[String])
 
-object TwitterSource {
+object TwitterSource extends TweetExtractor {
   def source(config: Config, hashtags: Seq[String])(implicit fm: Materializer, system: ActorSystem): Source[Tweet, NotUsed] = {
     import system.dispatcher
     val source: Source[Tweet, ActorRef] = Source.actorRef[Tweet](1000, OverflowStrategy.dropHead)
@@ -64,11 +64,7 @@ object TwitterSource {
   private def listener(streamEntry: ActorRef) = new StatusStreamHandler() {
     override def onStatus(status: Status) {
 
-      val userName: String = status.getUser.getName
-      val tweetText: String = status.getText
-      val placeName: Option[String] = if (status.getPlace != null) Some(status.getPlace.getName) else None
-      val hashTags: Seq[String] = status.getHashtagEntities.toSeq.map(ht => ht.getText.toLowerCase)
-      streamEntry ! Tweet(UUID.randomUUID(), userName, tweetText, placeName, hashTags)
+      streamEntry ! extractTweet(status)
     }
 
     override def onDeletionNotice(statusDeletionNotice: StatusDeletionNotice): Unit = {}
