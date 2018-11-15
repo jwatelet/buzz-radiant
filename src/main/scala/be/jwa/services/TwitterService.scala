@@ -6,27 +6,27 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.util.Timeout
-import be.jwa.actors.TweetActor.{GetTweetCount, GetTweets}
+import be.jwa.actors.TwitterActor.{GetTweetCount, GetTweets, GetUsers}
 import be.jwa.actors.TweetCount
-import be.jwa.json.TweetJsonSupport
-import be.jwa.sources.Tweet
+import be.jwa.controllers.{Tweet, TwitterUser}
+import be.jwa.json.TwitterJsonSupport
 
-trait TweetService extends TweetJsonSupport {
+trait TwitterService extends TwitterJsonSupport {
 
-  val tweetActor: ActorRef
+  val twitterActor: ActorRef
   implicit val timeout: Timeout
   lazy val tweetRoutes: Route = pathPrefix("tweets") {
     pathEnd {
       get {
         complete {
-          (tweetActor ? GetTweets).mapTo[Seq[Tweet]]
+          (twitterActor ? GetTweets).mapTo[Seq[Tweet]]
         }
       }
     } ~ pathPrefix("count") {
       pathEnd {
         get {
           complete {
-            (tweetActor ? GetTweetCount).mapTo[TweetCount]
+            (twitterActor ? GetTweetCount).mapTo[TweetCount]
           }
         }
       }

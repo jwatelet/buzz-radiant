@@ -8,10 +8,11 @@ import akka.http.scaladsl.server.Route
 import akka.stream.scaladsl.{Flow, GraphDSL, RunnableGraph, Sink, Source}
 import akka.stream.{ActorMaterializer, ClosedShape}
 import akka.util.Timeout
-import be.jwa.actors.TweetActor
-import be.jwa.actors.TweetActor.AddTweet
+import be.jwa.actors.TwitterActor
+import be.jwa.actors.TwitterActor.AddTweet
+import be.jwa.controllers.Tweet
 import be.jwa.services.{BuzzRadiantHttpServices, WebSocketService}
-import be.jwa.sources.{Tweet, TwitterSource}
+import be.jwa.sources.TwitterSource
 import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.duration._
@@ -22,7 +23,7 @@ object Boot extends App {
   implicit val system: ActorSystem = ActorSystem()
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val timeout: Timeout = Timeout(20.seconds)
-  implicit val tweetActor: ActorRef = system.actorOf(TweetActor.props())
+  implicit val tweetActor: ActorRef = system.actorOf(TwitterActor.props())
   val listenedHashtags = Seq("#warcraft", "#Blizzard" , "#BFA", "#wow", "#wowclassic")
   val twitterSource: Source[Tweet, NotUsed] = TwitterSource.source(Config(ConfigFactory.load()), listenedHashtags)
 

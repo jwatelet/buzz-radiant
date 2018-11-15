@@ -1,14 +1,16 @@
 package be.jwa.actors
 
 import akka.actor.{Actor, Props}
-import be.jwa.actors.TweetActor.{AddTweet, GetTweetCount, GetTweets}
-import be.jwa.sources.Tweet
+import be.jwa.actors.TwitterActor._
+import be.jwa.controllers.Tweet
 
 import scala.collection.mutable.ListBuffer
 
 case class TweetCount(count: Int)
 
-object TweetActor {
+case class TwitterUserCount(count: Int)
+
+object TwitterActor {
 
   case class AddTweet(tweet: Tweet)
 
@@ -16,10 +18,14 @@ object TweetActor {
 
   case object GetTweets
 
-  def props(): Props = Props(new TweetActor())
+  case object GetUsers
+
+  case object GetUsersCount
+
+  def props(): Props = Props(new TwitterActor())
 }
 
-class TweetActor extends Actor {
+class TwitterActor extends Actor {
 
   private val tweetBuffer = ListBuffer[Tweet]()
 
@@ -34,5 +40,11 @@ class TweetActor extends Actor {
 
     case GetTweets =>
       sender() ! tweetBuffer
+
+    case GetUsers =>
+      sender() ! tweetBuffer.map(tweet => tweet.user)
+
+    case GetUsersCount =>
+      sender() ! TwitterUserCount(tweetBuffer.map(tweet => tweet.user).length)
   }
 }
