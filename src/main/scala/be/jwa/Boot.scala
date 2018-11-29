@@ -44,6 +44,6 @@ object Boot extends App {
   val route = Route.seal(new WebSocketService(twitterSource).route ~ new BuzzRadiantHttpServices().routes)
 
   graph.run()
-  Http().bindAndHandle(route, "localhost", 8000)
+  Http().bindAndHandle(route, "localhost", 8080)
   println(s"Server online at http://localhost:8000/")
 }
