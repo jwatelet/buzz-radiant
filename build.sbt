@@ -15,10 +15,12 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-http-spray-json" % akkaV,
     "com.typesafe.akka" %% "akka-actor" % "2.5.18",
     "com.typesafe.akka" %% "akka-stream" % "2.5.18",
-    "org.slf4j" % "slf4j-api" % "1.7.25",
-    "org.slf4j" % "slf4j-simple" % "1.7.25" % Test,
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
+    "ch.qos.logback" % "logback-classic" % "1.2.3",
     "com.twitter" % "hbc-core" % "2.2.0",
     "com.twitter" % "hbc-twitter4j" % "2.2.0",
     "org.slf4j" % "slf4j-simple" % "1.7.21"
   )
 }
+
+libraryDependencies ~= { _.map(_.exclude("org.slf4j", "slf4j-simple")) }
