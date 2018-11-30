@@ -19,7 +19,7 @@ trait TwitterUserService extends TwitterJsonSupport {
     pathEnd {
       get {
         complete {
-          (twitterActor ? GetUsers).mapTo[Seq[TwitterUser]]
+          (twitterActor ? GetUsers).mapTo[Set[TwitterUser]]
         }
       }
     } ~
