@@ -7,13 +7,16 @@ import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Flow, Sink, Source}
 import be.jwa.controllers.Tweet
+import be.jwa.directive.CorsSupport
 import be.jwa.json.TwitterJsonSupport
 import spray.json._
 
-class WebSocketService(dataSource: Source[Tweet, NotUsed])(implicit fm: Materializer, system: ActorSystem) extends Directives with TwitterJsonSupport {
+class WebSocketService(dataSource: Source[Tweet, NotUsed])(implicit fm: Materializer, system: ActorSystem) extends Directives with TwitterJsonSupport with CorsSupport {
 
-  lazy val route: Route = path("tweets") {
-    handleWebSocketMessages(webSocketFlow)
+  lazy val route: Route = cors {
+    path("ws") {
+      handleWebSocketMessages(webSocketFlow)
+    }
   }
 
   private def webSocketFlow: Flow[Message, Message, NotUsed] =
