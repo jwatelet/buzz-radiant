@@ -1,14 +1,13 @@
 package be.jwa.sources
 
-import java.util.UUID
 import java.util.concurrent.{Executors, LinkedBlockingQueue}
 
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.{BroadcastHub, Keep, Source}
 import akka.stream.{Materializer, OverflowStrategy}
-import be.jwa.Config
-import be.jwa.controllers.{Tweet, TweetExtractor}
+import be.jwa.ConfigTwitterCredentials
+import be.jwa.controllers.{Tweet, TwitterExtractor}
 import com.google.common.collect.Lists
 import com.twitter.hbc.ClientBuilder
 import com.twitter.hbc.core.Constants
@@ -24,8 +23,8 @@ import scala.collection.JavaConverters._
 import scala.concurrent.Future
 
 
-object TwitterSource extends TweetExtractor {
-  def source(config: Config, hashtags: Seq[String])(implicit fm: Materializer, system: ActorSystem): Source[Tweet, NotUsed] = {
+object TwitterSource extends TwitterExtractor {
+  def source(config: ConfigTwitterCredentials, hashtags: Seq[String])(implicit fm: Materializer, system: ActorSystem): Source[Tweet, NotUsed] = {
     import system.dispatcher
     val source: Source[Tweet, ActorRef] = Source.actorRef[Tweet](1000, OverflowStrategy.dropHead)
     val (streamEntry: ActorRef, publisherSource: Source[Tweet, NotUsed]) = source.toMat(BroadcastHub.sink(bufferSize = 1024))(Keep.both).run
@@ -33,7 +32,7 @@ object TwitterSource extends TweetExtractor {
     publisherSource
   }
 
-  private def runTwitterClient(config: Config, hashtags: Seq[String], streamEntry: ActorRef) {
+  private def runTwitterClient(config: ConfigTwitterCredentials, hashtags: Seq[String], streamEntry: ActorRef) {
     val (consumerKey, consumerSecret, token, secret) = config.twitterConfig
     val queue = new LinkedBlockingQueue[String](10000)
 

@@ -7,7 +7,7 @@ case class Tweet(id: Long, user: TwitterUser, tweetText: String, placeName: Opti
 
 case class TwitterUser(id: Long, name: String, lang: String, followersCount: Int, friendsCount: Int, description: Option[String])
 
-trait TweetExtractor {
+trait TwitterExtractor {
 
   def extractTweet(status: Status): Tweet = {
 

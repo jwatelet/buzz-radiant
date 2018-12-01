@@ -1,50 +1,51 @@
 package be.jwa
 
 import akka.NotUsed
+import akka.pattern.ask
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.stream.scaladsl.{Flow, GraphDSL, RunnableGraph, Sink, Source}
-import akka.stream.{ActorMaterializer, ClosedShape}
+import akka.stream.ActorMaterializer
+import akka.stream.scaladsl.{RunnableGraph, Source}
 import akka.util.Timeout
-import be.jwa.actors.TwitterActor
-import be.jwa.actors.TwitterActor.AddTweet
+import be.jwa.actors.TweetGraphActor.MakeGraph
+import be.jwa.actors.{TweetGraphActor, TwitterActor}
 import be.jwa.controllers.Tweet
 import be.jwa.services.{BuzzRadiantHttpServices, WebSocketService}
 import be.jwa.sources.TwitterSource
 import com.typesafe.config.ConfigFactory
 import org.slf4j.LoggerFactory
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 
 object Boot extends App {
-  val logger = LoggerFactory.getLogger(classOf[Config])
-  implicit val system: ActorSystem = ActorSystem()
-  implicit val materializer: ActorMaterializer = ActorMaterializer()
-  implicit val timeout: Timeout = Timeout(20.seconds)
-  implicit val tweetActor: ActorRef = system.actorOf(TwitterActor.props())
-  val listenedHashtags = Seq("#warcraft", "#Blizzard" , "#BFA", "#wow", "#wowclassic")
-  val twitterSource: Source[Tweet, NotUsed] = TwitterSource.source(new Config(ConfigFactory.load()), listenedHashtags)
+  private val logger = LoggerFactory.getLogger(getClass.getName)
+  private implicit val system: ActorSystem = ActorSystem()
+  private implicit val materializer: ActorMaterializer = ActorMaterializer()
+  private implicit val ec: ExecutionContext = system.dispatcher
+  private implicit val timeout: Timeout = Timeout(20.seconds)
+  private implicit val tweetActor: ActorRef = system.actorOf(TwitterActor.props(), "tweetActor")
 
-  val graph: RunnableGraph[NotUsed] = RunnableGraph.fromGraph(GraphDSL.create() { implicit builder =>
-    import akka.stream.scaladsl.GraphDSL.Implicits._
-
-    val printlnSink = Sink.foreach(println)
-    val flow = Flow[Tweet].map { t =>
-      tweetActor ! AddTweet(t)
-      t
-    }
-    twitterSource ~> flow ~> printlnSink
-
-    ClosedShape
-  })
+  private val listenedHashtags = Seq("#warcraft", "#Blizzard", "#BFA", "#wow", "#wowclassic")
+  private val twitterSource: Source[Tweet, NotUsed] = TwitterSource.source(new ConfigTwitterCredentials(ConfigFactory.load()), listenedHashtags)
+  private val graphActor = system.actorOf(TweetGraphActor.props())
 
 
-  val route = Route.seal(new WebSocketService(twitterSource).route ~ new BuzzRadiantHttpServices().routes)
+  private val allRoutes = Route.seal(new WebSocketService(twitterSource).route ~ new BuzzRadiantHttpServices().routes)
 
-  graph.run()
-  Http().bindAndHandle(route, "0.0.0.0", 8080)
-  logger.info(s"Server online at http://0.0.0.0:8080/")
+  (graphActor ? MakeGraph(twitterSource, tweetActor)).mapTo[RunnableGraph[NotUsed]].map(g => g.run())
+
+
+  Http().bindAndHandle(allRoutes, Config.interface, Config.port)
+  logger.info(s"Server online at http://${Config.interface}:${Config.port}/")
+}
+
+
+object Config {
+
+  val interface: String = Option(System.getenv("INTERFACE")).getOrElse("localhost")
+  val port: Int = Option(System.getenv("PORT")).getOrElse("8080").toInt
 }

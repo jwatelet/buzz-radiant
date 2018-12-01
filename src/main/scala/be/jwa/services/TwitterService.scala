@@ -6,9 +6,9 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.util.Timeout
-import be.jwa.actors.TwitterActor.{GetTweetCount, GetTweets, GetUsers}
 import be.jwa.actors.TweetCount
-import be.jwa.controllers.{Tweet, TwitterUser}
+import be.jwa.actors.TwitterActor.{GetTweetCount, GetTweets}
+import be.jwa.controllers.Tweet
 import be.jwa.json.TwitterJsonSupport
 
 trait TwitterService extends TwitterJsonSupport {
