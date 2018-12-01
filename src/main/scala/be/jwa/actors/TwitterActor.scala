@@ -12,15 +12,17 @@ case class TwitterUserCount(count: Int)
 
 object TwitterActor {
 
-  case class AddTweet(tweet: Tweet)
+  trait TwitterMessage
 
-  case object GetTweetCount
+  case class AddTweet(tweet: Tweet) extends TwitterMessage
 
-  case object GetTweets
+  case object GetTweetCount extends TwitterMessage
 
-  case object GetUsers
+  case object GetTweets extends TwitterMessage
 
-  case object GetUsersCount
+  case object GetUsers extends TwitterMessage
+
+  case object GetUsersCount extends TwitterMessage
 
   def props(): Props = Props(new TwitterActor())
 }

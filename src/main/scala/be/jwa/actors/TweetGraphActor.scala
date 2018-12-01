@@ -9,13 +9,16 @@ import be.jwa.ConfigTwitterCredentials
 import be.jwa.actors.TweetGraphActor.{MakeGraph, MakeTwitterSource}
 import be.jwa.controllers.Tweet
 import be.jwa.controllers.graph.{TwitterGraphMaker, TwitterSourceMaker}
+import org.slf4j.LoggerFactory
 
 
 object TweetGraphActor {
 
-  case class MakeGraph(twitterSource: Source[Tweet, NotUsed], tweetActor: ActorRef)
+  trait TweetMessage
 
-  case class MakeTwitterSource(credentials: ConfigTwitterCredentials, hashtags: Seq[String])
+  case class MakeGraph(twitterSource: Source[Tweet, NotUsed], tweetActor: ActorRef) extends TweetMessage
+
+  case class MakeTwitterSource(credentials: ConfigTwitterCredentials, hashtags: Seq[String]) extends TweetMessage
 
   def props()(implicit materializer: ActorMaterializer, timeout: Timeout): Props = Props(new TweetGraphActor())
 
@@ -23,6 +26,7 @@ object TweetGraphActor {
 
 class TweetGraphActor(implicit val timeout: Timeout, implicit val materializer: ActorMaterializer) extends Actor with TwitterGraphMaker with TwitterSourceMaker {
 
+  private val logger = LoggerFactory.getLogger(getClass.getName)
   implicit val system: ActorSystem = context.system
 
   def receive: Receive = {
@@ -32,5 +36,6 @@ class TweetGraphActor(implicit val timeout: Timeout, implicit val materializer: 
 
     case MakeTwitterSource(credentials, hashtags) =>
       sender() ! makeTwitterSource(credentials, hashtags)
+    case msg => logger.error(s"Unknown received message : $msg")
   }
 }
