@@ -10,4 +10,4 @@ Copy `src/main/resources/application.conf.template` to `src/main/resources/appli
 
 Run with `sbt run`
 
-Use `ws://localhost:8000/tweets` to gets tweets in WebSocket
+Use `ws://localhost:8080/tweets` to gets tweets in WebSocket
