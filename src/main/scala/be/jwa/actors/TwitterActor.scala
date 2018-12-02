@@ -3,6 +3,7 @@ package be.jwa.actors
 import akka.actor.{Actor, Props}
 import be.jwa.actors.TwitterActor._
 import be.jwa.controllers.Tweet
+import org.slf4j.LoggerFactory
 
 import scala.collection.mutable.ListBuffer
 
@@ -29,6 +30,7 @@ object TwitterActor {
 
 class TwitterActor extends Actor {
 
+  private val logger = LoggerFactory.getLogger(getClass.getName)
   private val tweetBuffer = ListBuffer[Tweet]()
 
   def receive: Receive = {
@@ -48,5 +50,7 @@ class TwitterActor extends Actor {
 
     case GetUsersCount =>
       sender() ! TwitterUserCount(tweetBuffer.map(tweet => tweet.user).toSet.size)
+
+    case msg => logger.error(s"Unknown received message : $msg")
   }
 }

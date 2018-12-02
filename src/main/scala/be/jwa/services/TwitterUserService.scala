@@ -5,6 +5,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.util.Timeout
+import be.jwa.actors.BuzzActor.SendMessageToTwitterActor
 import be.jwa.actors.TwitterActor.{GetUsers, GetUsersCount}
 import be.jwa.actors.TwitterUserCount
 import be.jwa.controllers.TwitterUser
@@ -12,14 +13,14 @@ import be.jwa.json.TwitterJsonSupport
 
 trait TwitterUserService extends TwitterJsonSupport {
 
-  val twitterActor: ActorRef
+  val buzzObserverActor: ActorRef
   implicit val timeout: Timeout
 
-  lazy val twitterUserRoutes: Route = pathPrefix("users") {
+  lazy val twitterUserRoutes: Route = pathPrefix("observers" / JavaUUID / "users") { observerId =>
     pathEnd {
       get {
         complete {
-          (twitterActor ? GetUsers).mapTo[Set[TwitterUser]]
+          (buzzObserverActor ? SendMessageToTwitterActor(observerId, GetUsers)).mapTo[Option[Set[TwitterUser]]]
         }
       }
     } ~
@@ -27,7 +28,7 @@ trait TwitterUserService extends TwitterJsonSupport {
         pathEnd {
           get {
             complete {
-              (twitterActor ? GetUsersCount).mapTo[TwitterUserCount]
+              (buzzObserverActor ? SendMessageToTwitterActor(observerId, GetUsersCount)).mapTo[Option[TwitterUserCount]]
             }
           }
         }

@@ -6,16 +6,17 @@ import akka.http.scaladsl.server.Directives._
 import akka.util.Timeout
 import be.jwa.directive.CorsSupport
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
-class BuzzRadiantHttpServices(implicit val twitterActor: ActorRef, implicit val system: ActorSystem, implicit val timeout: Timeout) extends TwitterService with TwitterUserService
-  with CorsSupport {
+class BuzzRadiantHttpServices(implicit val buzzObserverActor: ActorRef, implicit val system: ActorSystem,
+                              implicit val timeout: Timeout, implicit val ec: ExecutionContext) extends TwitterService with TwitterUserService
+  with BuzzObserverService with CorsSupport {
 
   implicit val dispatcher: ExecutionContextExecutor = system.dispatcher
   val mainRoutes: Route = pathEndOrSingleSlash {
     get {
       complete {
-        "hello world"
+        "buzz radiant"
       }
     }
   }
@@ -23,7 +24,7 @@ class BuzzRadiantHttpServices(implicit val twitterActor: ActorRef, implicit val 
   val routes: Route = {
     Route.seal(
       cors {
-        tweetRoutes ~ twitterUserRoutes ~ mainRoutes
+        tweetRoutes ~ twitterUserRoutes ~ buzzObserverRoutes ~ mainRoutes
       }
     )
   }
