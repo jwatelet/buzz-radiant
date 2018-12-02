@@ -34,7 +34,8 @@ trait BuzzObserverService extends TwitterJsonSupport with UUIDJsonFormatter {
           complete {
             (buzzObserverActor ? GetAllBuzzObserversIds)
               .mapTo[Set[UUID]]
-              .map(_.toString())
+              .map(_.map(_.toString))
+
           }
         }
     } ~ pathPrefix(JavaUUID) { observerId =>
