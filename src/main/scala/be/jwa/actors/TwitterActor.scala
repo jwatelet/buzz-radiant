@@ -37,18 +37,22 @@ class TwitterActor extends Actor {
 
     case AddTweet(tweet: Tweet) =>
       tweetBuffer.+=(tweet)
-      sender() ! s" ${tweet.id} Added"
+      logger.info(s"AddTweet : ${tweet.id} Added")
 
     case GetTweetCount =>
+      logger.info(s"Get TweetCount")
       sender() ! TweetCount(tweetBuffer.length)
 
     case GetTweets =>
+      logger.info(s"GetTweets")
       sender() ! tweetBuffer
 
     case GetUsers =>
+      logger.info(s"GetUsers")
       sender() ! tweetBuffer.map(tweet => tweet.user).toSet
 
     case GetUsersCount =>
+      logger.info(s"GetUsersCount")
       sender() ! TwitterUserCount(tweetBuffer.map(tweet => tweet.user).toSet.size)
 
     case msg => logger.error(s"Unknown received message : $msg")

@@ -22,17 +22,18 @@ import twitter4j.{StallWarning, Status, StatusDeletionNotice}
 import scala.collection.JavaConverters._
 import scala.concurrent.Future
 
+case class SourceAndTwitterClient(source: Source[Tweet, NotUsed], eventualTwitterClient: Future[Twitter4jStatusClient])
 
 object TwitterSource extends TwitterExtractor {
-  def source(config: ConfigTwitterCredentials, hashtags: Seq[String])(implicit fm: Materializer, system: ActorSystem): Source[Tweet, NotUsed] = {
+  def source(config: ConfigTwitterCredentials, hashtags: Seq[String])(implicit fm: Materializer, system: ActorSystem): SourceAndTwitterClient = {
     import system.dispatcher
     val source: Source[Tweet, ActorRef] = Source.actorRef[Tweet](1000, OverflowStrategy.dropHead)
     val (streamEntry: ActorRef, publisherSource: Source[Tweet, NotUsed]) = source.toMat(BroadcastHub.sink(bufferSize = 1024))(Keep.both).run
-    Future(runTwitterClient(config, hashtags, streamEntry))
-    publisherSource
+
+    SourceAndTwitterClient(publisherSource, Future(runTwitterClient(config, hashtags, streamEntry)))
   }
 
-  private def runTwitterClient(config: ConfigTwitterCredentials, hashtags: Seq[String], streamEntry: ActorRef) {
+  private def runTwitterClient(config: ConfigTwitterCredentials, hashtags: Seq[String], streamEntry: ActorRef): Twitter4jStatusClient = {
     val (consumerKey, consumerSecret, token, secret) = config.twitterConfig
     val queue = new LinkedBlockingQueue[String](10000)
 
@@ -51,13 +52,14 @@ object TwitterSource extends TwitterExtractor {
     val numProcessingThreads = 4
     val service = Executors.newFixedThreadPool(numProcessingThreads)
 
-    val t4jClient = new Twitter4jStatusClient(
+    val t4jClient: Twitter4jStatusClient = new Twitter4jStatusClient(
       client, queue, Lists.newArrayList(listener(streamEntry)), service)
 
     t4jClient.connect()
     for (_: Int <- 0 to numProcessingThreads) {
       t4jClient.process()
     }
+    t4jClient
   }
 
   private def listener(streamEntry: ActorRef) = new StatusStreamHandler() {

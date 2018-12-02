@@ -5,7 +5,7 @@ import akka.pattern.ask
 import akka.stream.ActorMaterializer
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
-import be.jwa.actors.BuzzActor.{CreateBuzzObserver, GetAllBuzzObservers, SendMessageToTwitterActor}
+import be.jwa.actors.BuzzActor.{CreateBuzzObserver, GetAllBuzzObserversIds, SendMessageToTwitterActor}
 import be.jwa.actors.TwitterActor.{GetTweetCount, GetTweets, GetUsersCount}
 import be.jwa.actors.{BuzzActor, TweetCount, TwitterUserCount}
 import be.jwa.controllers.{Tweet, TwitterUser}
@@ -39,7 +39,7 @@ class BuzzActorTest() extends TestKit(ActorSystem("buzz-actor-test")) with Impli
     Await.result(buzzActor ? CreateBuzzObserver(Seq("#buzz", "#test")), 5.seconds)
     Await.result(buzzActor ? CreateBuzzObserver(Seq("#buzz2", "#test2")), 5.seconds)
 
-    Await.result((buzzActor ? GetAllBuzzObservers).mapTo[Map[UUID, ActorRef]], 5.seconds).size shouldEqual 2
+    Await.result((buzzActor ? GetAllBuzzObserversIds).mapTo[Map[UUID, ActorRef]], 5.seconds).size shouldEqual 2
   }
 
 

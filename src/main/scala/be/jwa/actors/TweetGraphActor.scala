@@ -32,10 +32,13 @@ class TweetGraphActor(implicit val timeout: Timeout, implicit val materializer: 
   def receive: Receive = {
 
     case MakeGraph(twitterSource, tweetActor) =>
+      logger.info(s"MakeGraph")
       sender() ! makeTwitterGraph(twitterSource, tweetActor)
 
     case MakeTwitterSource(credentials, hashtags) =>
+      logger.info(s"MakeTwitterSource")
       sender() ! makeTwitterSource(credentials, hashtags)
+
     case msg => logger.error(s"Unknown received message : $msg")
   }
 }

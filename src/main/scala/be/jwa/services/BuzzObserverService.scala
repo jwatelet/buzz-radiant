@@ -2,13 +2,12 @@ package be.jwa.services
 
 import java.util.UUID
 
-import akka.pattern.ask
 import akka.actor.ActorRef
-import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
+import akka.pattern.ask
 import akka.util.Timeout
-
-import be.jwa.actors.BuzzActor.CreateBuzzObserver
+import be.jwa.actors.BuzzActor.{CreateBuzzObserver, DeleteBuzzObserver, GetAllBuzzObserversIds}
 import be.jwa.json.{TwitterJsonSupport, UUIDJsonFormatter}
 import org.slf4j.LoggerFactory
 
@@ -22,11 +21,28 @@ trait BuzzObserverService extends TwitterJsonSupport with UUIDJsonFormatter {
   implicit val ec: ExecutionContext
 
   lazy val buzzObserverRoutes: Route = pathPrefix("observers") {
-    post {
-      entity(as[Seq[String]]) { hashtags =>
-        complete {
-          logger.info(s" hashtags : $hashtags")
-          (buzzObserverActor ? CreateBuzzObserver(hashtags)).mapTo[UUID].map(id => id.toString)
+    pathEnd {
+      post {
+        entity(as[Seq[String]]) { hashtags =>
+          complete {
+            logger.info(s" hashtags : $hashtags")
+            (buzzObserverActor ? CreateBuzzObserver(hashtags)).mapTo[UUID].map(id => id.toString)
+          }
+        }
+      } ~
+        get {
+          complete {
+            (buzzObserverActor ? GetAllBuzzObserversIds)
+              .mapTo[Set[UUID]]
+              .map(_.toString())
+          }
+        }
+    } ~ pathPrefix(JavaUUID) { observerId =>
+      pathEnd {
+        delete {
+          complete {
+            (buzzObserverActor ? DeleteBuzzObserver(observerId)).mapTo[String]
+          }
         }
       }
     }
