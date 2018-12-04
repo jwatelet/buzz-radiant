@@ -30,4 +30,5 @@ object Boot extends App {
 object Config {
   val interface: String = Option(System.getenv("INTERFACE")).getOrElse("localhost")
   val port: Int = Option(System.getenv("PORT")).getOrElse("8080").toInt
+
 }
