@@ -1,0 +1,38 @@
+{
+  "name": "buzz-radiant",
+  "scripts": {
+  },
+  "env": {
+    "INTERFACE": {
+      "required": true
+    },
+    "PORT": {
+      "required": true
+    },
+    "TWITTER_CONSUMER_KEY": {
+      "required": true
+    },
+    "TWITTER_CONSUMER_SECRET": {
+      "required": true
+    },
+    "TWITTER_SECRET": {
+      "required": true
+    },
+    "TWITTER_TOKEN": {
+      "required": true
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1
+    }
+  },
+  "addons": [
+    "heroku-postgresql"
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/scala"
+    }
+  ]
+}
