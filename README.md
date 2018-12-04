@@ -1,3 +1,5 @@
+[![Heroku CI Status](https://buzz-radiant-heroku-ci-badge.herokuapp.com/last.svg)](https://dashboard.heroku.com/pipelines/buzz-pipe/tests)
+
 ## Config ##
 
 All information to get your auth key is on https://apps.twitter.com/
