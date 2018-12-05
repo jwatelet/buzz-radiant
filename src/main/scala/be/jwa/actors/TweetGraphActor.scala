@@ -7,16 +7,16 @@ import akka.stream.scaladsl.Source
 import akka.util.Timeout
 import be.jwa.ConfigTwitterCredentials
 import be.jwa.actors.TweetGraphActor.{MakeGraph, MakeTwitterSource}
-import be.jwa.controllers.Tweet
 import be.jwa.controllers.graph.{TwitterGraphMaker, TwitterSourceMaker}
 import org.slf4j.LoggerFactory
+import twitter4j.Status
 
 
 object TweetGraphActor {
 
   trait TweetMessage
 
-  case class MakeGraph(twitterSource: Source[Tweet, NotUsed], tweetActor: ActorRef) extends TweetMessage
+  case class MakeGraph(twitterSource: Source[Status, NotUsed], tweetActor: ActorRef) extends TweetMessage
 
   case class MakeTwitterSource(credentials: ConfigTwitterCredentials, hashtags: Seq[String]) extends TweetMessage
 

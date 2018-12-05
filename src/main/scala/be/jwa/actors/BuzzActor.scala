@@ -51,19 +51,11 @@ class BuzzActor(implicit val timeout: Timeout, implicit val materializer: ActorM
       createBuzzObserver(hashtags) pipeTo sender
 
     case StopBuzzObserver(id) =>
-      twitterActorMap.get(id).foreach { bo =>
-        bo.killSwitch.shutdown()
-        bo.eventualTwitterClient.foreach(tw => tw.stop())
-      }
+      stopBuzzObserver(id)
       logger.info(s"StopBuzzObserver id : $id")
 
     case DeleteBuzzObserver(id) =>
-      twitterActorMap.get(id).foreach { bo =>
-        bo.killSwitch.shutdown()
-        bo.eventualTwitterClient.foreach(tw => tw.stop())
-        bo.twitterActor ! PoisonPill
-      }
-      twitterActorMap = twitterActorMap.filterKeys(k => k != id)
+      deleteBuzzObserver(id)
       logger.info(s"DeleteBuzzObserver id : $id")
       sender() ! "Deletion launched"
 
@@ -79,7 +71,23 @@ class BuzzActor(implicit val timeout: Timeout, implicit val materializer: ActorM
     case msg => logger.error(s"Unknown received message : $msg")
   }
 
-  def createBuzzObserver(hashtags: Seq[String]): Future[UUID] = {
+  private def deleteBuzzObserver(id: UUID): Unit = {
+    twitterActorMap.get(id).foreach { bo =>
+      bo.killSwitch.shutdown()
+      bo.eventualTwitterClient.foreach(tw => tw.stop())
+      bo.twitterActor ! PoisonPill
+    }
+    twitterActorMap = twitterActorMap.filterKeys(k => k != id)
+  }
+
+  private def stopBuzzObserver(id: UUID): Unit = {
+    twitterActorMap.get(id).foreach { bo =>
+      bo.killSwitch.shutdown()
+      bo.eventualTwitterClient.foreach(tw => tw.stop())
+    }
+  }
+
+  private def createBuzzObserver(hashtags: Seq[String]): Future[UUID] = {
 
     val uuid = UUID.randomUUID()
     logger.info(s"Start buzz observer creation uuid : $uuid")
@@ -94,6 +102,7 @@ class BuzzActor(implicit val timeout: Timeout, implicit val materializer: ActorM
       uuid
     }
   }
+
 
   implicit def optionToFuture[A](x: Option[Future[A]])(implicit ec: ExecutionContext): Future[Option[A]] =
     x match {

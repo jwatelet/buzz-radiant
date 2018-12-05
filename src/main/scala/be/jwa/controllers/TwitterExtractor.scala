@@ -1,11 +1,18 @@
 package be.jwa.controllers
 
 
-import twitter4j.{Status, User}
+import twitter4j.{GeoLocation, Place, Status, User}
 
-case class Tweet(id: Long, user: TwitterUser, tweetText: String, placeName: Option[String], hashTags: Seq[String])
+case class TwitterPlace(country: Option[String], countryCode: Option[String], id: Option[String], placeType: Option[String],
+                        url: Option[String], streetAdress: Option[String])
 
-case class TwitterUser(id: Long, name: String, lang: String, followersCount: Int, friendsCount: Int, description: Option[String])
+case class TwitterGeolocation(latitude: Double, longitude: Double)
+
+case class Tweet(id: Long, user: TwitterUser, tweetText: String, placeName: Option[TwitterPlace], hashTags: Seq[String],
+                 geolocation: Option[TwitterGeolocation])
+
+case class TwitterUser(id: Long, name: String, lang: String, followersCount: Int, friendsCount: Int, description: Option[String],
+                       createdAt: Long)
 
 trait TwitterExtractor {
 
@@ -13,15 +20,16 @@ trait TwitterExtractor {
 
     val id = status.getId
     val tweetText: String = status.getText
-    val placeName: Option[String] = if (status.getPlace != null) Some(status.getPlace.getName) else None
     val hashTags: Seq[String] = status.getHashtagEntities.toSeq.map(ht => ht.getText.toLowerCase)
 
+    val place: Option[TwitterPlace] = Option(status.getPlace).map(extractPlace)
+    val geoLocation = Option(status.getGeoLocation).map(extractGeolocation)
     val user = extractUser(status.getUser)
 
-    Tweet(id, user, tweetText, placeName, hashTags)
+    Tweet(id, user, tweetText, place, hashTags, geoLocation)
   }
 
-  private def extractUser(user: User): TwitterUser = {
+  private def extractUser(user: User) = {
 
     val id: Long = user.getId
     val name: String = user.getName
@@ -29,7 +37,26 @@ trait TwitterExtractor {
     val followersCount: Int = user.getFollowersCount
     val friendsCount: Int = user.getFriendsCount
     val description: String = user.getDescription
-    TwitterUser(id, name, lang, followersCount, friendsCount, Option(description))
+    val createdAt = user.getCreatedAt.getTime
+    TwitterUser(id, name, lang, followersCount, friendsCount, Option(description), createdAt)
+  }
+
+  private def extractPlace(place: Place) = {
+
+    val country = Option(place.getCountry)
+    val countryCode = Option(place.getCountryCode)
+    val id = Option(place.getId)
+    val placeType = Option(place.getPlaceType)
+    val url = Option(place.getURL)
+    val streetAddress = Option(place.getStreetAddress)
+
+    TwitterPlace(country, countryCode, id, placeType, url, streetAddress)
+  }
+
+  private def extractGeolocation(geoLocation: GeoLocation) = {
+    val latitude = geoLocation.getLatitude
+    val longitude = geoLocation.getLongitude
+    TwitterGeolocation(latitude, longitude)
   }
 
 }

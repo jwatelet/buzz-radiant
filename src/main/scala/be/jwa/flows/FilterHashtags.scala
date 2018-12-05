@@ -1,4 +1,4 @@
-package be.jwa.filters
+package be.jwa.flows
 
 import akka.NotUsed
 import akka.stream.scaladsl.Flow
