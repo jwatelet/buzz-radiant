@@ -12,6 +12,6 @@ object TweetLog {
     .addAttributes(Attributes.logLevels(
       onElement = Attributes.LogLevels.Info,
       onFailure = Attributes.LogLevels.Error,
-      onFinish = Attributes.LogLevels.Info))
+      onFinish = Attributes.LogLevels.Debug))
 
 }

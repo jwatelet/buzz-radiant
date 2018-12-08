@@ -1,14 +1,8 @@
 project/project
 target/
 .idea
-.ensime
-.ensime_cache/
 **/*~
 **/#*#
 **/.#*
-**/application.conf
-metastore_db
-spark-warehouse
-derby.log
+**/twitter.conf
 *.txt
-src/main/resources/application.conf

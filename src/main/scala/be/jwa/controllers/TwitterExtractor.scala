@@ -4,11 +4,11 @@ package be.jwa.controllers
 import twitter4j.{GeoLocation, Place, Status, User}
 
 case class TwitterPlace(country: Option[String], countryCode: Option[String], id: Option[String], placeType: Option[String],
-                        url: Option[String], streetAdress: Option[String])
+                        url: Option[String], streetAddress: Option[String])
 
 case class TwitterGeolocation(latitude: Double, longitude: Double)
 
-case class Tweet(id: Long, user: TwitterUser, tweetText: String, placeName: Option[TwitterPlace], hashTags: Seq[String],
+case class Tweet(id: Long, user: TwitterUser, tweetText: String, place: Option[TwitterPlace], hashTags: Seq[String],
                  geolocation: Option[TwitterGeolocation])
 
 case class TwitterUser(id: Long, name: String, lang: String, followersCount: Int, friendsCount: Int, description: Option[String],
