@@ -3,13 +3,14 @@ package be.jwa.controllers
 
 import twitter4j.{GeoLocation, Place, Status, User}
 
+
+case class Tweet(id: Long, createdAt: Long, tweetText: String, hashTags: Seq[String], user: TwitterUser,
+                 place: Option[TwitterPlace], geolocation: Option[TwitterGeolocation])
+
 case class TwitterPlace(country: Option[String], countryCode: Option[String], id: Option[String], placeType: Option[String],
                         url: Option[String], streetAddress: Option[String])
 
 case class TwitterGeolocation(latitude: Double, longitude: Double)
-
-case class Tweet(id: Long, user: TwitterUser, tweetText: String, place: Option[TwitterPlace], hashTags: Seq[String],
-                 geolocation: Option[TwitterGeolocation])
 
 case class TwitterUser(id: Long, name: String, lang: String, followersCount: Int, friendsCount: Int, description: Option[String],
                        createdAt: Long)
@@ -19,14 +20,15 @@ trait TwitterExtractor {
   def extractTweet(status: Status): Tweet = {
 
     val id = status.getId
-    val tweetText: String = status.getText
-    val hashTags: Seq[String] = status.getHashtagEntities.toSeq.map(ht => ht.getText.toLowerCase)
+    val createdAt = status.getCreatedAt.getTime
+    val tweetText = status.getText
+    val hashTags = status.getHashtagEntities.toSeq.map(ht => ht.getText.toLowerCase)
 
     val place: Option[TwitterPlace] = Option(status.getPlace).map(extractPlace)
     val geoLocation = Option(status.getGeoLocation).map(extractGeolocation)
     val user = extractUser(status.getUser)
 
-    Tweet(id, user, tweetText, place, hashTags, geoLocation)
+    Tweet(id, createdAt, tweetText, hashTags, user, place, geoLocation)
   }
 
   private def extractUser(user: User) = {

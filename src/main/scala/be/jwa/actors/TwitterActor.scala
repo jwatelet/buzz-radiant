@@ -2,7 +2,7 @@ package be.jwa.actors
 
 import akka.actor.{Actor, ActorLogging, Props}
 import be.jwa.actors.TwitterActor._
-import be.jwa.controllers.Tweet
+import be.jwa.controllers.{StatisticsMaker, Tweet}
 
 import scala.collection.mutable.ListBuffer
 
@@ -19,6 +19,8 @@ object TwitterActor {
   trait TwitterMessage
 
   case class AddTweet(tweet: Tweet) extends TwitterMessage
+
+  case object GetStatistics extends TwitterMessage
 
   case object GetTweets extends TwitterMessage
 
@@ -39,15 +41,19 @@ object TwitterActor {
   def props(): Props = Props(new TwitterActor())
 }
 
-class TwitterActor extends Actor with ActorLogging {
+class TwitterActor extends Actor with ActorLogging with StatisticsMaker {
 
-  private val tweetBuffer = ListBuffer[Tweet]()
+  val tweetBuffer: ListBuffer[Tweet] = ListBuffer()
 
   def receive: Receive = {
 
     case AddTweet(tweet: Tweet) =>
       tweetBuffer.+=(tweet)
       log.info(s"AddTweet : ${tweet.id} Added")
+
+    case GetStatistics =>
+
+      sender() ! makeStatistics(tweetBuffer)
 
     case GetTweetCount =>
       log.info(s"Get TweetCount")
