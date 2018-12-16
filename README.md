@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/jwatelet/buzz-radiant.svg?branch=master)](https://travis-ci.com/jwatelet/buzz-radiant)
+
 ## Config ##
 
 All information to get your auth key is on https://apps.twitter.com/
