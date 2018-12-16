@@ -37,6 +37,7 @@ trait StatisticsMaker {
       TimeStatistic(new Date(timeInMillis).toString, timeInMillis, buffer.size)
     }
     .toSeq
+    .sortBy(t => -t.timeInMillis)
 
   private def roundTime(timeInMillis: Long, windowMinutes: Int): Long = {
     val dt = new DateTime(timeInMillis, DateTimeZone.UTC)
