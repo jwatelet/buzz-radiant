@@ -9,7 +9,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class TwitterStatistics(tweetCount: Int, userCount: Int, timeStatistics: Seq[TimeStatistic])
 
-case class TimeStatistic(date: String, timeInMillis: Long, numberOfTweets: Int)
+case class TimeStatistic(date: String, timeInMillis: Long, tweetCount: Int)
 
 
 trait StatisticsMaker {
@@ -31,7 +31,7 @@ trait StatisticsMaker {
     }
   }
 
-  private def makeTimeStatistic(tweetBuffer: ListBuffer[Tweet]) = tweetBuffer.groupBy(t => roundTime(t.createdAt, 10))
+  private def makeTimeStatistic(tweetBuffer: ListBuffer[Tweet]): Seq[TimeStatistic] = tweetBuffer.groupBy(t => roundTime(t.createdAt, 10))
     .map { case (timeInMillis, buffer) =>
 
       TimeStatistic(new Date(timeInMillis).toString, timeInMillis, buffer.size)
