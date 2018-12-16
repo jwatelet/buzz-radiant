@@ -7,8 +7,7 @@ import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.util.Timeout
 import be.jwa.actors.BuzzActor.SendMessageToTwitterActor
-import be.jwa.actors.TweetCount
-import be.jwa.actors.TwitterActor.{GetStatistics, GetTweetCount, GetTweets}
+import be.jwa.actors.TwitterActor.{GetStatistics, GetTweets}
 import be.jwa.controllers.{Tweet, TwitterStatistics}
 import be.jwa.json.TwitterJsonSupport
 
@@ -21,14 +20,6 @@ trait TwitterService extends TwitterJsonSupport {
       get {
         complete {
           (buzzObserverActor ? SendMessageToTwitterActor(observerId, GetTweets)).mapTo[Option[Seq[Tweet]]]
-        }
-      }
-    } ~ pathPrefix("count") {
-      pathEnd {
-        get {
-          complete {
-            (buzzObserverActor ? SendMessageToTwitterActor(observerId, GetTweetCount)).mapTo[Option[TweetCount]]
-          }
         }
       }
     } ~

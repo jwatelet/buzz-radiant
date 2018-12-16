@@ -5,9 +5,9 @@ import akka.pattern.ask
 import akka.stream.ActorMaterializer
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
+import be.jwa.actors.BuzzActor
 import be.jwa.actors.BuzzActor.{CreateBuzzObserver, DeleteBuzzObserver, GetAllBuzzObserversIds, SendMessageToTwitterActor}
-import be.jwa.actors.TwitterActor.{GetTweetCount, GetTweets, GetUsersCount}
-import be.jwa.actors.{BuzzActor, TweetCount, TwitterUserCount}
+import be.jwa.actors.TwitterActor.GetTweets
 import be.jwa.controllers.{Tweet, TwitterUser}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
@@ -40,25 +40,7 @@ class BuzzActorTest() extends TestKit(ActorSystem("buzz-actor-test")) with Impli
     }
 
 
-    "instanciate a buzz observer and send tweet count message" in {
-
-      val ids: Set[UUID] = Await.result((buzzActor ? GetAllBuzzObserversIds).mapTo[Set[UUID]], 5.seconds)
-
-      ids.foreach(id => buzzActor ! SendMessageToTwitterActor(id, GetTweetCount))
-
-      expectMsgType[Option[TweetCount]]
-    }
-
-    "instanciate a buzz observer and send users count message" in {
-
-      val ids: Set[UUID] = Await.result((buzzActor ? GetAllBuzzObserversIds).mapTo[Set[UUID]], 5.seconds)
-
-      ids.foreach(id => buzzActor ! SendMessageToTwitterActor(id, GetUsersCount))
-
-      expectMsgType[Option[TwitterUserCount]]
-    }
-
-    "instanciate a buzz observer and send get all tweet message" in {
+    "instantiate a buzz observer and send get all tweet message" in {
 
       val ids: Set[UUID] = Await.result((buzzActor ? GetAllBuzzObserversIds).mapTo[Set[UUID]], 5.seconds)
 
@@ -67,7 +49,7 @@ class BuzzActorTest() extends TestKit(ActorSystem("buzz-actor-test")) with Impli
       expectMsgType[Option[Seq[Tweet]]]
     }
 
-    "instanciate a buzz observer and send get all users message" in {
+    "instantiate a buzz observer and send get all users message" in {
 
       val ids: Set[UUID] = Await.result((buzzActor ? GetAllBuzzObserversIds).mapTo[Set[UUID]], 5.seconds)
 

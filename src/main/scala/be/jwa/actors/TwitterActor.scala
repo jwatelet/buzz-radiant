@@ -3,12 +3,9 @@ package be.jwa.actors
 import akka.actor.{Actor, ActorLogging, Props}
 import be.jwa.actors.TwitterActor._
 import be.jwa.controllers.{StatisticsMaker, Tweet}
-
+import akka.pattern.pipe
 import scala.collection.mutable.ListBuffer
-
-case class TweetCount(count: Int)
-
-case class TwitterUserCount(count: Int)
+import scala.concurrent.ExecutionContext
 
 case class PlaceCount(count: Int)
 
@@ -24,11 +21,7 @@ object TwitterActor {
 
   case object GetTweets extends TwitterMessage
 
-  case object GetTweetCount extends TwitterMessage
-
   case object GetUsers extends TwitterMessage
-
-  case object GetUsersCount extends TwitterMessage
 
   case object GetPlaces extends TwitterMessage
 
@@ -38,10 +31,10 @@ object TwitterActor {
 
   case object GetGeolocationCount extends TwitterMessage
 
-  def props(): Props = Props(new TwitterActor())
+  def props()(implicit ec: ExecutionContext): Props = Props(new TwitterActor())
 }
 
-class TwitterActor extends Actor with ActorLogging with StatisticsMaker {
+class TwitterActor(implicit val ec: ExecutionContext) extends Actor with ActorLogging with StatisticsMaker {
 
   val tweetBuffer: ListBuffer[Tweet] = ListBuffer()
 
@@ -52,12 +45,8 @@ class TwitterActor extends Actor with ActorLogging with StatisticsMaker {
       log.info(s"AddTweet : ${tweet.id} Added")
 
     case GetStatistics =>
-
-      sender() ! makeStatistics(tweetBuffer)
-
-    case GetTweetCount =>
-      log.info(s"Get TweetCount")
-      sender() ! TweetCount(tweetBuffer.length)
+      log.info(s"GetStatistics")
+      makeStatistics(tweetBuffer) pipeTo sender()
 
     case GetTweets =>
       log.info(s"GetTweets")
@@ -66,10 +55,6 @@ class TwitterActor extends Actor with ActorLogging with StatisticsMaker {
     case GetUsers =>
       log.info(s"GetUsers")
       sender() ! tweetBuffer.map(tweet => tweet.user).toSet.takeRight(1000)
-
-    case GetUsersCount =>
-      log.info(s"GetUsersCount")
-      sender() ! TwitterUserCount(tweetBuffer.map(tweet => tweet.user).toSet.size)
 
     case GetPlaces =>
       log.info(s"GetPlaces")
@@ -81,10 +66,9 @@ class TwitterActor extends Actor with ActorLogging with StatisticsMaker {
       sender() ! PlaceCount(tweetBuffer.toList.count(t => t.place.isDefined))
 
     case GetGeolocations =>
+      log.info(s"GetGeolocations")
       sender() ! tweetBuffer.filter(t => t.geolocation.isDefined)
         .flatMap(t => t.geolocation)
-
-      log.info(s"GetGeolocations")
 
     case GetGeolocationCount =>
       log.info(s"GetGeolocationCount")
