@@ -7,13 +7,13 @@ import org.joda.time.{DateTime, DateTimeZone}
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
 
-case class TwitterStatistics(tweetCount: Int, userCount: Int, timeStatistics: Seq[TimeStatistic])
+case class TwitterStatistics(hashtags: Seq[String], tweetCount: Int, userCount: Int, timeStatistics: Seq[TimeStatistic])
 
 case class TimeStatistic(date: String, timeInMillis: Long, tweetCount: Int)
 
 
 trait StatisticsMaker {
-
+  val hashtags: Seq[String]
   implicit val ec: ExecutionContext
 
   def makeStatistics(tweetBuffer: ListBuffer[Tweet]): Future[TwitterStatistics] = {
@@ -27,7 +27,7 @@ trait StatisticsMaker {
       tweetCount <- eventualTweetCount
       uniqueUserCount <- eventualUniqueUserCount
     } yield {
-      TwitterStatistics(tweetCount, uniqueUserCount, timeStatistics)
+      TwitterStatistics(hashtags, tweetCount, uniqueUserCount, timeStatistics)
     }
   }
 

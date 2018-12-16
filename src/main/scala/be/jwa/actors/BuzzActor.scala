@@ -20,9 +20,12 @@ import com.typesafe.config.ConfigFactory
 import spray.json._
 import twitter4j.Status
 
+import scala.collection.immutable
 import scala.concurrent.{ExecutionContext, Future}
 
-case class BuzzObserver(twitterActor: ActorRef, killSwitch: UniqueKillSwitch,
+case class BuzzObserverId(hashtags: Seq[String], id: UUID)
+
+case class BuzzObserver(hashtags: Seq[String], twitterActor: ActorRef, killSwitch: UniqueKillSwitch,
                         eventualTwitterClient: Future[Twitter4jStatusClient], source: Source[Status, NotUsed])
 
 object BuzzActor {
@@ -56,6 +59,7 @@ class BuzzActor(implicit val timeout: Timeout, implicit val materializer: ActorM
   def receive: Receive = {
 
     case CreateBuzzObserver(hashtags) =>
+      log.info(s"CreateBuzzObserver : $hashtags")
       createBuzzObserver(hashtags) pipeTo sender
 
     case StopBuzzObserver(id) =>
@@ -68,8 +72,11 @@ class BuzzActor(implicit val timeout: Timeout, implicit val materializer: ActorM
       sender() ! "Deletion launched"
 
     case GetAllBuzzObserversIds =>
-      log.info(s"GetAllBuzzObservers ids")
-      sender ! buzzObserverMap.keySet
+      val observerIds: Seq[BuzzObserverId] = buzzObserverMap.map { case (id, observer) =>
+        BuzzObserverId(observer.hashtags, id)
+      }.toSeq
+      log.info(s"GetAllBuzzObserversIds")
+      sender ! observerIds
 
     case SendMessageToTwitterActor(id, msg) =>
       val response: Future[Option[Any]] = buzzObserverMap.get(id).map(bo => bo.twitterActor ? msg)
@@ -77,6 +84,7 @@ class BuzzActor(implicit val timeout: Timeout, implicit val materializer: ActorM
       response pipeTo sender
 
     case InitWebsocket(id, wsEntry) =>
+      log.info(s"InitWebSocket")
       buzzObserverMap.get(id).foreach { o =>
         o.source
           .via(ParserStatus.parse)
@@ -86,6 +94,7 @@ class BuzzActor(implicit val timeout: Timeout, implicit val materializer: ActorM
 
     case msg => log.error(s"Unknown received message : $msg")
   }
+
 
   private def deleteBuzzObserver(id: UUID): Unit = {
     buzzObserverMap.get(id).foreach { bo =>
@@ -106,14 +115,14 @@ class BuzzActor(implicit val timeout: Timeout, implicit val materializer: ActorM
   private def createBuzzObserver(hashtags: Seq[String]): Future[UUID] = {
     val uuid = UUID.randomUUID()
     log.info(s"Start buzz observer creation uuid : $uuid")
-    val twitterActor: ActorRef = context.actorOf(TwitterActor.props(), s"tweet-actor-$uuid")
+    val twitterActor: ActorRef = context.actorOf(TwitterActor.props(hashtags), s"tweet-actor-$uuid")
     for {
       uuid <- Future(UUID.randomUUID())
       sourceAndTwitterClient <- (graphActor ? MakeTwitterSource(credentials, hashtags)).mapTo[SourceAndTwitterClient]
       graph <- (graphActor ? MakeGraph(sourceAndTwitterClient.source, twitterActor)).mapTo[RunnableGraph[UniqueKillSwitch]]
     } yield {
       val ks = graph.run()
-      buzzObserverMap += (uuid -> BuzzObserver(twitterActor, ks, sourceAndTwitterClient.eventualTwitterClient, sourceAndTwitterClient.source))
+      buzzObserverMap += (uuid -> BuzzObserver(hashtags, twitterActor, ks, sourceAndTwitterClient.eventualTwitterClient, sourceAndTwitterClient.source))
       uuid
     }
   }

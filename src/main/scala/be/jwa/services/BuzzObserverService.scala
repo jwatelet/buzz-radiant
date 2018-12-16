@@ -8,14 +8,13 @@ import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.util.Timeout
 import be.jwa.actors.BuzzActor.{CreateBuzzObserver, DeleteBuzzObserver, GetAllBuzzObserversIds}
+import be.jwa.actors.BuzzObserverId
 import be.jwa.json.{TwitterJsonSupport, UUIDJsonFormatter}
-import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContext
 
 trait BuzzObserverService extends TwitterJsonSupport with UUIDJsonFormatter {
 
-  private val logger = LoggerFactory.getLogger(getClass.getName)
   val buzzObserverActor: ActorRef
   implicit val timeout: Timeout
   implicit val ec: ExecutionContext
@@ -25,7 +24,6 @@ trait BuzzObserverService extends TwitterJsonSupport with UUIDJsonFormatter {
       post {
         entity(as[Seq[String]]) { hashtags =>
           complete {
-            logger.info(s" hashtags : $hashtags")
             (buzzObserverActor ? CreateBuzzObserver(hashtags)).mapTo[UUID].map(id => id.toString)
           }
         }
@@ -33,9 +31,7 @@ trait BuzzObserverService extends TwitterJsonSupport with UUIDJsonFormatter {
         get {
           complete {
             (buzzObserverActor ? GetAllBuzzObserversIds)
-              .mapTo[Set[UUID]]
-              .map(_.map(_.toString))
-
+              .mapTo[Seq[BuzzObserverId]]
           }
         }
     } ~ pathPrefix(JavaUUID) { observerId =>

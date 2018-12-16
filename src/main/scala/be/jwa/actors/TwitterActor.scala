@@ -31,10 +31,10 @@ object TwitterActor {
 
   case object GetGeolocationCount extends TwitterMessage
 
-  def props()(implicit ec: ExecutionContext): Props = Props(new TwitterActor())
+  def props(hashtags: Seq[String])(implicit ec: ExecutionContext): Props = Props(new TwitterActor(hashtags))
 }
 
-class TwitterActor(implicit val ec: ExecutionContext) extends Actor with ActorLogging with StatisticsMaker {
+class TwitterActor(val hashtags: Seq[String])(implicit val ec: ExecutionContext) extends Actor with ActorLogging with StatisticsMaker {
 
   val tweetBuffer: ListBuffer[Tweet] = ListBuffer()
 
@@ -42,36 +42,36 @@ class TwitterActor(implicit val ec: ExecutionContext) extends Actor with ActorLo
 
     case AddTweet(tweet: Tweet) =>
       tweetBuffer.+=(tweet)
-      log.info(s"AddTweet : ${tweet.id} Added")
+      log.debug(s"AddTweet : ${tweet.id} Added")
 
     case GetStatistics =>
-      log.info(s"GetStatistics")
+      log.debug(s"GetStatistics")
       makeStatistics(tweetBuffer) pipeTo sender()
 
     case GetTweets =>
-      log.info(s"GetTweets")
+      log.debug(s"GetTweets")
       sender() ! tweetBuffer.toList.takeRight(1000)
 
     case GetUsers =>
-      log.info(s"GetUsers")
+      log.debug(s"GetUsers")
       sender() ! tweetBuffer.map(tweet => tweet.user).toSet.takeRight(1000)
 
     case GetPlaces =>
-      log.info(s"GetPlaces")
+      log.debug(s"GetPlaces")
       sender() ! tweetBuffer.filter(t => t.place.isDefined)
         .flatMap(t => t.place)
 
     case GetPlaceCount =>
-      log.info(s"GetPlaceCount")
+      log.debug(s"GetPlaceCount")
       sender() ! PlaceCount(tweetBuffer.toList.count(t => t.place.isDefined))
 
     case GetGeolocations =>
-      log.info(s"GetGeolocations")
+      log.debug(s"GetGeolocations")
       sender() ! tweetBuffer.filter(t => t.geolocation.isDefined)
         .flatMap(t => t.geolocation)
 
     case GetGeolocationCount =>
-      log.info(s"GetGeolocationCount")
+      log.debug(s"GetGeolocationCount")
       sender() ! PlaceCount(tweetBuffer.toList.count(t => t.geolocation.isDefined))
 
     case msg => log.error(s"Unknown received message : $msg")
