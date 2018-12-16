@@ -25,6 +25,7 @@ object Boot extends App {
   val allRoutes = Route.seal(new BuzzRadiantHttpServices().routes)
   Http().bindAndHandle(allRoutes, Config.interface, Config.port)
   logger.info(s"Server online at http://${Config.interface}:${Config.port}/")
+
 }
 
 object Config {
