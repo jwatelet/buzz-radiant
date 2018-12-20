@@ -47,7 +47,7 @@ trait StatisticsMaker {
       .take(10)
   }
 
-  private def makeTimeStatistic(tweetBuffer: ListBuffer[Tweet], timeWindow : Int): Seq[TimeStatistic] = tweetBuffer.groupBy(t => roundTime(t.createdAt, 10))
+  private def makeTimeStatistic(tweetBuffer: ListBuffer[Tweet], timeWindow : Int): Seq[TimeStatistic] = tweetBuffer.groupBy(t => roundTime(t.createdAt, timeWindow))
     .map { case (timeInMillis, buffer) =>
 
       TimeStatistic(new Date(timeInMillis).toString, timeInMillis, buffer.size)
