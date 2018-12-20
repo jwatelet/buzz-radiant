@@ -12,6 +12,8 @@ import be.jwa.controllers.TwitterGeolocation
 import be.jwa.json.TwitterJsonSupport
 
 trait GeolocationService extends TwitterJsonSupport {
+  implicit val timeout: Timeout
+  val buzzObserverActor: ActorRef
   lazy val geolocationRoutes: Route = pathPrefix("observers" / JavaUUID / "geolocations") { observerId =>
     pathEnd {
       get {
@@ -30,8 +32,4 @@ trait GeolocationService extends TwitterJsonSupport {
         }
       }
   }
-  implicit val timeout: Timeout
-  val buzzObserverActor: ActorRef
 }
-
-

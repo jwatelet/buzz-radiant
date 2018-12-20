@@ -60,5 +60,4 @@ trait TwitterExtractor {
     val longitude = geoLocation.getLongitude
     TwitterGeolocation(latitude, longitude)
   }
-
 }

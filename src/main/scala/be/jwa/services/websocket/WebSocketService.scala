@@ -9,13 +9,12 @@ import be.jwa.json.TwitterJsonSupport
 import scala.concurrent.ExecutionContext
 
 trait WebSocketService extends Directives with TwitterJsonSupport with CorsSupport with WebSocketFactory {
-  lazy val websocketRoute: Route = cors {
-    path("observers" / JavaUUID / "ws") { observerId =>
-      handleWebSocketMessages(getOrCreateWebsocketHandler(observerId).flow)
-    }
-  }
   implicit val timeout: Timeout
   implicit val system: ActorSystem
   implicit val ec: ExecutionContext
   val buzzObserverActor: ActorRef
+
+  lazy val websocketRoute: Route = path("observers" / JavaUUID / "ws") { observerId =>
+    handleWebSocketMessages(getOrCreateWebsocketHandler(observerId).flow)
+  }
 }

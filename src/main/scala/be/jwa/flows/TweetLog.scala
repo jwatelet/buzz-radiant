@@ -13,5 +13,4 @@ object TweetLog {
       onElement = Attributes.LogLevels.Info,
       onFailure = Attributes.LogLevels.Error,
       onFinish = Attributes.LogLevels.Debug))
-
 }

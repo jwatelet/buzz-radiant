@@ -20,7 +20,6 @@ import com.typesafe.config.ConfigFactory
 import spray.json._
 import twitter4j.Status
 
-import scala.collection.immutable
 import scala.concurrent.{ExecutionContext, Future}
 
 case class BuzzObserverId(hashtags: Seq[String], id: UUID)

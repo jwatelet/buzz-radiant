@@ -30,5 +30,4 @@ class BuzzRadiantHttpServices(implicit val buzzObserverActor: ActorRef, implicit
       }
     )
   }
-
 }

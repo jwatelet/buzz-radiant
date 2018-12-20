@@ -12,6 +12,8 @@ import be.jwa.controllers.TwitterPlace
 import be.jwa.json.TwitterJsonSupport
 
 trait PlaceService extends TwitterJsonSupport {
+  implicit val timeout: Timeout
+  val buzzObserverActor: ActorRef
   lazy val placeRoutes: Route = pathPrefix("observers" / JavaUUID / "places") { observerId =>
     pathEnd {
       get {
@@ -30,6 +32,4 @@ trait PlaceService extends TwitterJsonSupport {
         }
       }
   }
-  implicit val timeout: Timeout
-  val buzzObserverActor: ActorRef
 }

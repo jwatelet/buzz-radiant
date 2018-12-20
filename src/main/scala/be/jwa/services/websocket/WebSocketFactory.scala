@@ -15,9 +15,7 @@ import scala.concurrent.duration._
 object WebSocketFactory {
 
   case class WsHandler(streamEntry: ActorRef, flow: Flow[Message, Message, NotUsed])
-
 }
-
 
 trait WebSocketFactory {
 
