@@ -17,7 +17,7 @@ object TwitterActor {
 
   case class AddTweet(tweet: Tweet) extends TwitterMessage
 
-  case object GetStatistics extends TwitterMessage
+  case class GetStatistics(timeWindow: Int) extends TwitterMessage
 
   case object GetTweets extends TwitterMessage
 
@@ -44,9 +44,9 @@ class TwitterActor(val hashtags: Seq[String])(implicit val ec: ExecutionContext)
       tweetBuffer.+=(tweet)
       log.debug(s"AddTweet : ${tweet.id} Added")
 
-    case GetStatistics =>
+    case GetStatistics(timeWindow) =>
       log.debug(s"GetStatistics")
-      makeStatistics(tweetBuffer) pipeTo sender()
+      makeStatistics(tweetBuffer, timeWindow) pipeTo sender()
 
     case GetTweets =>
       log.debug(s"GetTweets")

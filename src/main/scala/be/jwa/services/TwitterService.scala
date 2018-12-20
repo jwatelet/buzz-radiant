@@ -26,9 +26,12 @@ trait TwitterService extends TwitterJsonSupport {
       pathPrefix("statistics") {
         pathEnd {
           get {
-            complete {
-              (buzzObserverActor ? SendMessageToTwitterActor(observerId, GetStatistics)).mapTo[Option[TwitterStatistics]]
+            parameters('timeWindow ? 10) { timeWindow =>
+              complete {
+                (buzzObserverActor ? SendMessageToTwitterActor(observerId, GetStatistics(timeWindow))).mapTo[Option[TwitterStatistics]]
+              }
             }
+
           }
         }
       }
