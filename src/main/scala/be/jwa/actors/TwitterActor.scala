@@ -52,7 +52,7 @@ class TwitterActor(val hashtags: Seq[String])(implicit val ec: ExecutionContext)
 
     case GetStatistics(timeWindow) =>
       log.debug(s"GetStatistics")
-      makeStatistics(timeCount, tweetCount) pipeTo sender()
+      makeStatistics(tweetQueue.toList, timeCount, tweetCount, timeWindow) pipeTo sender()
 
     case GetTweets =>
       log.debug(s"GetTweets")

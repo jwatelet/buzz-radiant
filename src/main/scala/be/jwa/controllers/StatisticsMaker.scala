@@ -17,21 +17,23 @@ trait StatisticsMaker {
   val hashtags: Seq[String]
   implicit val ec: ExecutionContext
 
-  def makeStatistics(timeCount: Map[Long, Int], tweetCount: Int): Future[TwitterStatistics] = {
+  def makeStatistics(lastTweets: List[Tweet], timeCount: Map[Long, Int], tweetCount: Int, timeWindow: Int): Future[TwitterStatistics] = {
 
-    val eventualTimeStatistics = Future(makeTimeStatistic(timeCount))
+    val eventualTimeStatistics = Future(makeTimeStatistic(timeCount, timeWindow))
     val eventualTweetCount = Future(tweetCount)
+    val eventualHashtagsStatistics = Future(makeHashtagsStatistics(lastTweets))
 
     for {
       timeStatistics <- eventualTimeStatistics
       tweetCount <- eventualTweetCount
+      hashtagsStatistics <- eventualHashtagsStatistics
     } yield {
-      TwitterStatistics(hashtags, tweetCount, timeStatistics, Seq())
+      TwitterStatistics(hashtags, tweetCount, timeStatistics, hashtagsStatistics)
     }
   }
 
-  protected def hashtagsStatistics(tweets: List[Tweet]): Seq[HashtagsStatistics] = {
-    tweets.flatMap(t => t.hashTags)
+  protected def makeHashtagsStatistics(lastTweets: List[Tweet]): Seq[HashtagsStatistics] = {
+    lastTweets.flatMap(t => t.hashTags)
       .groupBy(identity)
       .map { case (hashtag, list) =>
         HashtagsStatistics(hashtag, list.size)
@@ -41,8 +43,8 @@ trait StatisticsMaker {
       .take(10)
   }
 
-  protected def makeTimeStatistic(timeCount: Map[Long, Int]): Seq[TimeStatistic] = timeCount.map { case (timeInMillis, count) =>
-    TimeStatistic(new Date(timeInMillis).toString, timeInMillis, count)
+  protected def makeTimeStatistic(timeCount: Map[Long, Int], timeWindow: Int): Seq[TimeStatistic] = timeCount.map { case (timeInMillis, count) =>
+    TimeStatistic(new Date(roundTime(timeInMillis, timeWindow)).toString, timeInMillis, count)
   }
     .toSeq
     .sortBy(t => -t.timeInMillis)
