@@ -43,9 +43,14 @@ trait StatisticsMaker {
       .take(10)
   }
 
-  protected def makeTimeStatistic(timeCount: Map[Long, Int], timeWindow: Int): Seq[TimeStatistic] = timeCount.map { case (timeInMillis, count) =>
-    TimeStatistic(new Date(roundTime(timeInMillis, timeWindow)).toString, timeInMillis, count)
-  }
+  protected def makeTimeStatistic(timeCount: Map[Long, Int], timeWindow: Int): Seq[TimeStatistic] = timeCount.toSeq
+    .groupBy { case (timeInMillis, _) =>
+      roundTime(timeInMillis, timeWindow)
+    }
+    .map { case (timeInMillis, statisticSeq: Seq[(Long, Int)]) =>
+      val statisticCountSum = statisticSeq.map(_._2).sum
+      TimeStatistic(new Date(roundTime(timeInMillis, timeWindow)).toString, timeInMillis, statisticCountSum)
+    }
     .toSeq
     .sortBy(t => -t.timeInMillis)
 
