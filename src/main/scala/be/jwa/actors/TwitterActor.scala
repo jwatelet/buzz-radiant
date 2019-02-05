@@ -1,10 +1,11 @@
 package be.jwa.actors
 
 import akka.actor.{Actor, ActorLogging, Props}
+import akka.pattern.pipe
 import be.jwa.actors.TwitterActor._
 import be.jwa.controllers.{StatisticsMaker, Tweet}
-import akka.pattern.pipe
-import scala.collection.mutable.ListBuffer
+import be.jwa.queue.FiniteQueue
+
 import scala.concurrent.ExecutionContext
 
 case class PlaceCount(count: Int)
@@ -36,43 +37,48 @@ object TwitterActor {
 
 class TwitterActor(val hashtags: Seq[String])(implicit val ec: ExecutionContext) extends Actor with ActorLogging with StatisticsMaker {
 
-  val tweetBuffer: ListBuffer[Tweet] = ListBuffer()
+  val tweetQueue = new FiniteQueue[Tweet](10000)
+  var timeCount: Map[Long, Int] = Map()
+  var tweetCount: Int = 0
+
 
   def receive: Receive = {
 
     case AddTweet(tweet: Tweet) =>
-      tweetBuffer.+=(tweet)
+      tweetQueue.enqueue(tweet)
+      tweetCount += 1
+      timeCount += addCountToTimeMapMap(tweet, timeCount, 10)
       log.debug(s"AddTweet : ${tweet.id} Added")
 
     case GetStatistics(timeWindow) =>
       log.debug(s"GetStatistics")
-      makeStatistics(tweetBuffer, timeWindow) pipeTo sender()
+      makeStatistics(timeCount, tweetCount) pipeTo sender()
 
     case GetTweets =>
       log.debug(s"GetTweets")
-      sender() ! tweetBuffer.toList.takeRight(1000)
+      sender() ! tweetQueue.toList.takeRight(1000)
 
     case GetUsers =>
       log.debug(s"GetUsers")
-      sender() ! tweetBuffer.map(tweet => tweet.user).toSet.takeRight(1000)
+      sender() ! tweetQueue.toList.map(tweet => tweet.user).toSet.takeRight(1000)
 
     case GetPlaces =>
       log.debug(s"GetPlaces")
-      sender() ! tweetBuffer.filter(t => t.place.isDefined)
+      sender() ! tweetQueue.toList.filter(t => t.place.isDefined)
         .flatMap(t => t.place)
 
     case GetPlaceCount =>
       log.debug(s"GetPlaceCount")
-      sender() ! PlaceCount(tweetBuffer.toList.count(t => t.place.isDefined))
+      sender() ! PlaceCount(tweetQueue.toList.count(t => t.place.isDefined))
 
     case GetGeolocations =>
       log.debug(s"GetGeolocations")
-      sender() ! tweetBuffer.filter(t => t.geolocation.isDefined)
+      sender() ! tweetQueue.toList.filter(t => t.geolocation.isDefined)
         .flatMap(t => t.geolocation)
 
     case GetGeolocationCount =>
       log.debug(s"GetGeolocationCount")
-      sender() ! PlaceCount(tweetBuffer.toList.count(t => t.geolocation.isDefined))
+      sender() ! PlaceCount(tweetQueue.toList.count(t => t.geolocation.isDefined))
 
     case msg => log.error(s"Unknown received message : $msg")
   }

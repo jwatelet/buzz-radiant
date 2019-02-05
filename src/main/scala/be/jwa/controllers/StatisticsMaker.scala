@@ -4,10 +4,9 @@ import java.util.Date
 
 import org.joda.time.{DateTime, DateTimeZone}
 
-import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
 
-case class TwitterStatistics(observedHashtags: Seq[String], tweetCount: Int, userCount: Int,
+case class TwitterStatistics(observedHashtags: Seq[String], userCount: Int,
                              timeStatistics: Seq[TimeStatistic], hashtagStatistics: Seq[HashtagsStatistics])
 
 case class TimeStatistic(date: String, timeInMillis: Long, tweetCount: Int)
@@ -18,26 +17,21 @@ trait StatisticsMaker {
   val hashtags: Seq[String]
   implicit val ec: ExecutionContext
 
-  def makeStatistics(tweetBuffer: ListBuffer[Tweet], timeWindow: Int): Future[TwitterStatistics] = {
+  def makeStatistics(timeCount: Map[Long, Int], tweetCount: Int): Future[TwitterStatistics] = {
 
-    val eventualTimeStatistics = Future(makeTimeStatistic(tweetBuffer, timeWindow))
-    val eventualHashtagsStatistics = Future(hashtagsStatistics(tweetBuffer))
-    val eventualTweetCount = Future(tweetBuffer.size)
-    val eventualUniqueUserCount = Future(tweetBuffer.map(t => t.user).toSet.size)
+    val eventualTimeStatistics = Future(makeTimeStatistic(timeCount))
+    val eventualTweetCount = Future(tweetCount)
 
-    hashtagsStatistics(tweetBuffer)
     for {
       timeStatistics <- eventualTimeStatistics
-      hashtagStatistics <- eventualHashtagsStatistics
       tweetCount <- eventualTweetCount
-      uniqueUserCount <- eventualUniqueUserCount
     } yield {
-      TwitterStatistics(hashtags, tweetCount, uniqueUserCount, timeStatistics, hashtagStatistics)
+      TwitterStatistics(hashtags, tweetCount, timeStatistics, Seq())
     }
   }
 
-  private def hashtagsStatistics(tweetBuffer: ListBuffer[Tweet]): Seq[HashtagsStatistics] = {
-    tweetBuffer.flatMap(t => t.hashTags)
+  protected def hashtagsStatistics(tweets: List[Tweet]): Seq[HashtagsStatistics] = {
+    tweets.flatMap(t => t.hashTags)
       .groupBy(identity)
       .map { case (hashtag, list) =>
         HashtagsStatistics(hashtag, list.size)
@@ -47,20 +41,26 @@ trait StatisticsMaker {
       .take(10)
   }
 
-  private def makeTimeStatistic(tweetBuffer: ListBuffer[Tweet], timeWindow : Int): Seq[TimeStatistic] = tweetBuffer.groupBy(t => roundTime(t.createdAt, timeWindow))
-    .map { case (timeInMillis, buffer) =>
-
-      TimeStatistic(new Date(timeInMillis).toString, timeInMillis, buffer.size)
-    }
+  protected def makeTimeStatistic(timeCount: Map[Long, Int]): Seq[TimeStatistic] = timeCount.map { case (timeInMillis, count) =>
+    TimeStatistic(new Date(timeInMillis).toString, timeInMillis, count)
+  }
     .toSeq
     .sortBy(t => -t.timeInMillis)
 
-  private def roundTime(timeInMillis: Long, windowMinutes: Int): Long = {
+  protected def roundTime(timeInMillis: Long, windowMinutes: Int): Long = {
     val dt = new DateTime(timeInMillis, DateTimeZone.UTC)
     dt.withMinuteOfHour((dt.getMinuteOfHour / windowMinutes) * windowMinutes)
       .minuteOfDay
       .roundFloorCopy
       .toDate
       .getTime
+  }
+
+  protected def addCountToTimeMapMap(tweet: Tweet, timeCountMap: Map[Long, Int], timeWindow: Int): (Long, Int) = {
+
+    val roundedTime = roundTime(tweet.createdAt, timeWindow)
+    val count = timeCountMap.getOrElse(roundedTime, 0) + 1
+
+    roundedTime -> count
   }
 }
