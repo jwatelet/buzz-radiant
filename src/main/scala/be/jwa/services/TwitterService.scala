@@ -22,7 +22,7 @@ trait TwitterService extends TwitterJsonSupport {
   implicit def myExceptionHandler: ExceptionHandler =
     ExceptionHandler {
       case _: ArithmeticException =>
-        extractUri { uri =>
+        extractUri { _ =>
           complete(HttpResponse(NotAcceptable, entity = "timeWindow have to be > 0"))
         }
     }
