@@ -23,11 +23,6 @@ libraryDependencies ++= {
     "ch.qos.logback" % "logback-classic" % "1.2.3",
     "joda-time" % "joda-time" % "2.10.1",
     "com.twitter" % "hbc-core" % "2.2.0",
-    "com.twitter" % "hbc-twitter4j" % "2.2.0",
-    "org.slf4j" % "slf4j-simple" % "1.7.21"
+    "com.twitter" % "hbc-twitter4j" % "2.2.0"
   )
-}
-
-libraryDependencies ~= {
-  _.map(_.exclude("org.slf4j", "slf4j-simple"))
 }
