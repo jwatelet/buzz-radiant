@@ -12,8 +12,8 @@ case class TwitterPlace(country: Option[String], countryCode: Option[String], id
 
 case class TwitterGeolocation(latitude: Double, longitude: Double)
 
-case class TwitterUser(id: Long, name: String, lang: String, followersCount: Int, friendsCount: Int, description: Option[String],
-                       createdAt: Long)
+case class TwitterUser(id: Long, name: String, email: Option[String], lang: String, followersCount: Int, friendsCount: Int,
+                       description: Option[String], createdAt: Long)
 
 trait TwitterExtractor {
 
@@ -41,7 +41,8 @@ trait TwitterExtractor {
     val friendsCount: Int = user.getFriendsCount
     val description: String = user.getDescription
     val createdAt = user.getCreatedAt.getTime
-    TwitterUser(id, name, lang, followersCount, friendsCount, Option(description), createdAt)
+    val email = Option(user.getEmail)
+    TwitterUser(id, name, email, lang, followersCount, friendsCount, Option(description), createdAt)
   }
 
   private def extractPlace(place: Place) = {

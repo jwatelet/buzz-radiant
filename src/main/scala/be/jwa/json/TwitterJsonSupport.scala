@@ -7,7 +7,7 @@ import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 trait TwitterJsonSupport extends SprayJsonSupport with DefaultJsonProtocol with UUIDJsonFormatter with StatisticsJsonSupport {
 
-  implicit val twitterUserJsonFormat: RootJsonFormat[TwitterUser] = jsonFormat7(TwitterUser)
+  implicit val twitterUserJsonFormat: RootJsonFormat[TwitterUser] = jsonFormat8(TwitterUser)
   implicit val twitterPlaceJsonFormat: RootJsonFormat[TwitterPlace] = jsonFormat6(TwitterPlace)
   implicit val geolocationPlaceJsonFormat: RootJsonFormat[TwitterGeolocation] = jsonFormat2(TwitterGeolocation)
   implicit val tweetJsonFormat: RootJsonFormat[Tweet] = jsonFormat8(Tweet)

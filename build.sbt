@@ -19,7 +19,6 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
     "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
     "org.scalatest" %% "scalatest" % "3.2.0-SNAP9" % Test,
-    "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
     "ch.qos.logback" % "logback-classic" % "1.2.3",
     "joda-time" % "joda-time" % "2.10.1",
     "org.twitter4j" % "twitter4j-stream" % "4.0.7"
