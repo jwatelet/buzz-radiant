@@ -15,17 +15,16 @@ import be.jwa.actors.TwitterActor.TwitterMessage
 import be.jwa.flows.ParserStatus
 import be.jwa.json.TwitterJsonSupport
 import be.jwa.sources.SourceAndTwitterClient
-import com.twitter.hbc.twitter4j.Twitter4jStatusClient
 import com.typesafe.config.ConfigFactory
 import spray.json._
-import twitter4j.Status
+import twitter4j.{Status, TwitterStream}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 case class BuzzObserverId(hashtags: Seq[String], id: UUID)
 
 case class BuzzObserver(hashtags: Seq[String], twitterActor: ActorRef, killSwitch: UniqueKillSwitch,
-                        eventualTwitterClient: Future[Twitter4jStatusClient], source: Source[Status, NotUsed])
+                        eventualTwitterStream: Future[TwitterStream], source: Source[Status, NotUsed])
 
 object BuzzActor {
 
@@ -98,7 +97,7 @@ class BuzzActor(implicit val timeout: Timeout, implicit val materializer: ActorM
   private def deleteBuzzObserver(id: UUID): Unit = {
     buzzObserverMap.get(id).foreach { bo =>
       bo.killSwitch.shutdown()
-      bo.eventualTwitterClient.foreach(tw => tw.stop())
+      bo.eventualTwitterStream.foreach(ts => ts.shutdown())
       bo.twitterActor ! PoisonPill
     }
     buzzObserverMap = buzzObserverMap.filterKeys(k => k != id)
@@ -107,7 +106,7 @@ class BuzzActor(implicit val timeout: Timeout, implicit val materializer: ActorM
   private def stopBuzzObserver(id: UUID): Unit = {
     buzzObserverMap.get(id).foreach { bo =>
       bo.killSwitch.shutdown()
-      bo.eventualTwitterClient.foreach(tw => tw.stop())
+      bo.eventualTwitterStream.foreach(ts => ts.shutdown())
     }
   }
 

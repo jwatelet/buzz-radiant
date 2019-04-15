@@ -11,3 +11,6 @@ Create access token for your account, copy access token and access token secret.
 Copy `src/main/resources/twitter.conf.template` to `src/main/resources/twitter.conf` and fill in above keys/tokens/secrets.
 
 Run with `sbt run`
+
+
+## TODO ##

@@ -3,7 +3,7 @@ package be.jwa.controllers.graph
 import akka.NotUsed
 import akka.actor.ActorRef
 import akka.pattern.ask
-import akka.stream.scaladsl.{Flow, GraphDSL, RunnableGraph, Sink, Source}
+import akka.stream.scaladsl.{GraphDSL, RunnableGraph, Sink, Source}
 import akka.stream.{ClosedShape, KillSwitches, UniqueKillSwitch}
 import akka.util.Timeout
 import be.jwa.actors.TwitterActor.AddTweet
@@ -20,8 +20,6 @@ trait TwitterGraphMaker {
     RunnableGraph.fromGraph(GraphDSL.create(switch) { implicit builder =>
       killSwitch =>
         import akka.stream.scaladsl.GraphDSL.Implicits._
-
-
 
         twitterSource ~> ParserStatus.parse ~> TweetLog.info ~> killSwitch ~> Sink.foreach[Tweet](t => tweetActor ? AddTweet(t))
 

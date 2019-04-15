@@ -9,8 +9,8 @@ mappings in(Compile, packageDoc) := Seq()
 Compile / mainClass := Some("be.jwa.Boot")
 
 libraryDependencies ++= {
-  val akkaHttpVersion = "10.1.5"
-  val akkaVersion = "2.5.18"
+  val akkaHttpVersion = "10.1.8"
+  val akkaVersion = "2.5.22"
   Seq(
     "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
     "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
@@ -22,7 +22,6 @@ libraryDependencies ++= {
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
     "ch.qos.logback" % "logback-classic" % "1.2.3",
     "joda-time" % "joda-time" % "2.10.1",
-    "com.twitter" % "hbc-core" % "2.2.0",
-    "com.twitter" % "hbc-twitter4j" % "2.2.0"
+    "org.twitter4j" % "twitter4j-stream" % "4.0.7"
   )
 }
