@@ -11,7 +11,8 @@ import akka.util.Timeout
 import be.jwa.ConfigTwitterCredentials
 import be.jwa.actors.BuzzActor._
 import be.jwa.actors.TweetGraphActor.{MakeGraph, MakeTwitterSource}
-import be.jwa.actors.TwitterActor.TwitterMessage
+import be.jwa.actors.TwitterActor.{GetStatistics, TwitterMessage}
+import be.jwa.controllers.TwitterStatistics
 import be.jwa.flows.ParserStatus
 import be.jwa.json.TwitterJsonSupport
 import be.jwa.sources.SourceAndTwitterClient
@@ -19,6 +20,7 @@ import com.typesafe.config.ConfigFactory
 import spray.json._
 import twitter4j.{Status, TwitterStream}
 
+import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
 case class BuzzObserverId(hashtags: Seq[String], id: UUID)
@@ -30,7 +32,9 @@ object BuzzActor {
 
   trait BuzzMessage
 
-  case class InitWebsocket(id: UUID, websocketEntry: ActorRef) extends BuzzMessage
+  case class InitStatisticWebsocket(id: UUID, websocketEntry: ActorRef) extends BuzzMessage
+
+  case class InitTweetWebsocket(id: UUID, websocketEntry: ActorRef) extends BuzzMessage
 
   case object GetAllBuzzObserversIds extends BuzzMessage
 
@@ -55,6 +59,15 @@ class BuzzActor(implicit val timeout: Timeout, implicit val materializer: ActorM
   private var buzzObserverMap = Map[UUID, BuzzObserver]()
 
   def receive: Receive = {
+
+    case InitStatisticWebsocket(id, websocketEntry) =>
+      log.info(s"InitStatisticWebSocket")
+      context.system.scheduler.schedule(0.milliseconds, 500.milliseconds) {
+        (self ? SendMessageToTwitterActor(id, GetStatistics(10)))
+          .mapTo[Option[TwitterStatistics]]
+          .map(maybeStatistics => maybeStatistics.foreach(s => websocketEntry ! s.toJson.toString()))
+      }
+      sender() ! s"Initialisation of Statistic for observer : $id"
 
     case CreateBuzzObserver(hashtags) =>
       log.info(s"CreateBuzzObserver : $hashtags")
@@ -81,8 +94,8 @@ class BuzzActor(implicit val timeout: Timeout, implicit val materializer: ActorM
       log.info(s"ask twitter actor $id msg : $msg")
       response pipeTo sender
 
-    case InitWebsocket(id, wsEntry) =>
-      log.info(s"InitWebSocket")
+    case InitTweetWebsocket(id, wsEntry) =>
+      log.info(s"InitTweetWebSocket")
       buzzObserverMap.get(id).foreach { o =>
         o.source
           .via(ParserStatus.parse)

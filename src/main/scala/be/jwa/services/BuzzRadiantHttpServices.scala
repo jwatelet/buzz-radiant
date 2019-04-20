@@ -26,7 +26,7 @@ class BuzzRadiantHttpServices(implicit val buzzObserverActor: ActorRef, implicit
   val routes: Route = {
     Route.seal(
       cors {
-        tweetRoutes ~ twitterUserRoutes ~ buzzObserverRoutes ~ geolocationRoutes ~ placeRoutes ~ websocketRoute ~ mainRoutes
+        tweetRoutes ~ twitterUserRoutes ~ buzzObserverRoutes ~ geolocationRoutes ~ placeRoutes ~ websocketRoutes ~ mainRoutes
       }
     )
   }

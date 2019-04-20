@@ -8,13 +8,16 @@ import be.jwa.json.TwitterJsonSupport
 
 import scala.concurrent.ExecutionContext
 
-trait WebSocketService extends Directives with TwitterJsonSupport with CorsSupport with WebSocketFactory {
+trait WebSocketService extends Directives with TwitterJsonSupport with CorsSupport with TweetWebSocketFactory with StatisticWebSocketFactory {
   implicit val timeout: Timeout
   implicit val system: ActorSystem
   implicit val ec: ExecutionContext
   val buzzObserverActor: ActorRef
 
-  lazy val websocketRoute: Route = path("observers" / JavaUUID / "ws") { observerId =>
-    handleWebSocketMessages(getOrCreateWebsocketHandler(observerId).flow)
-  }
+  lazy val websocketRoutes: Route = path("observers" / JavaUUID / "tweets" / "ws") { observerId =>
+    handleWebSocketMessages(getOrCreateTweetWebsocketHandler(observerId).flow)
+  } ~
+    path("observers" / JavaUUID / "statistics" / "ws") { observerId =>
+      handleWebSocketMessages(getOrCreateStatisticWebsocketHandler(observerId).flow)
+    }
 }

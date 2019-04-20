@@ -51,33 +51,33 @@ class TwitterActor(val hashtags: Seq[String])(implicit val ec: ExecutionContext)
       log.debug(s"AddTweet : ${tweet.id} Added")
 
     case GetStatistics(timeWindow) =>
-      log.debug(s"GetStatistics")
+      log.info(s"GetStatistics")
       makeStatistics(tweetQueue.toList, timeCount, tweetCount, timeWindow) pipeTo sender()
 
     case GetTweets =>
-      log.debug(s"GetTweets")
+      log.info(s"GetTweets")
       sender() ! tweetQueue.toList.takeRight(1000)
 
     case GetUsers =>
-      log.debug(s"GetUsers")
+      log.info(s"GetUsers")
       sender() ! tweetQueue.toList.map(tweet => tweet.user).toSet.takeRight(1000)
 
     case GetPlaces =>
-      log.debug(s"GetPlaces")
+      log.info(s"GetPlaces")
       sender() ! tweetQueue.toList.filter(t => t.place.isDefined)
         .flatMap(t => t.place)
 
     case GetPlaceCount =>
-      log.debug(s"GetPlaceCount")
+      log.info(s"GetPlaceCount")
       sender() ! PlaceCount(tweetQueue.toList.count(t => t.place.isDefined))
 
     case GetGeolocations =>
-      log.debug(s"GetGeolocations")
+      log.info(s"GetGeolocations")
       sender() ! tweetQueue.toList.filter(t => t.geolocation.isDefined)
         .flatMap(t => t.geolocation)
 
     case GetGeolocationCount =>
-      log.debug(s"GetGeolocationCount")
+      log.info(s"GetGeolocationCount")
       sender() ! PlaceCount(tweetQueue.toList.count(t => t.geolocation.isDefined))
 
     case msg => log.error(s"Unknown received message : $msg")

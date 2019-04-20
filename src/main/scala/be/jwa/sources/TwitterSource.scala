@@ -31,6 +31,7 @@ object TwitterSource extends TwitterExtractor {
       .setOAuthConsumerSecret(consumerSecret)
       .setOAuthAccessToken(token)
       .setOAuthAccessTokenSecret(secret)
+      .setAsyncNumThreads(8)
 
     val twitterStream: TwitterStream = new TwitterStreamFactory(cb.build())
       .getInstance()
@@ -39,6 +40,7 @@ object TwitterSource extends TwitterExtractor {
 
 
     val query = new FilterQuery(hashtags.mkString(" "))
+
     twitterStream.filter(query)
   }
 

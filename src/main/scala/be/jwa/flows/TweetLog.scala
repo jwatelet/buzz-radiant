@@ -10,7 +10,7 @@ object TweetLog {
   def info: Flow[Tweet, Tweet, NotUsed] = Flow[Tweet]
     .log("tweetStream")
     .addAttributes(Attributes.logLevels(
-      onElement = Attributes.LogLevels.Info,
+      onElement = Attributes.LogLevels.Debug,
       onFailure = Attributes.LogLevels.Error,
       onFinish = Attributes.LogLevels.Debug))
 }

@@ -7,28 +7,28 @@ import akka.actor.ActorRef
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.stream.scaladsl.{BroadcastHub, Flow, Keep, Sink, Source}
 import akka.stream.{ActorMaterializer, OverflowStrategy}
-import be.jwa.actors.BuzzActor.InitWebsocket
-import be.jwa.services.websocket.WebSocketFactory.WsHandler
+import be.jwa.actors.BuzzActor.InitTweetWebsocket
+import be.jwa.services.websocket.TweetWebSocketFactory.WsHandler
 
 import scala.concurrent.duration._
 
-object WebSocketFactory {
+object TweetWebSocketFactory {
 
   case class WsHandler(streamEntry: ActorRef, flow: Flow[Message, Message, NotUsed])
 
 }
 
-trait WebSocketFactory {
+trait TweetWebSocketFactory {
 
   implicit val materializer: ActorMaterializer
   val buzzObserverActor: ActorRef
-  private var wsHandlers: Map[UUID, WsHandler] = Map()
+  private var tweetWSHandlers: Map[UUID, WsHandler] = Map()
 
-  def getOrCreateWebsocketHandler(wsId: UUID): WsHandler = {
-    wsHandlers.getOrElse(wsId, createWebsocketHandler(wsId))
+  def getOrCreateTweetWebsocketHandler(wsId: UUID): WsHandler = {
+    tweetWSHandlers.getOrElse(wsId, createTweetWebsocketHandler(wsId))
   }
 
-  private def createWebsocketHandler(observerId: UUID): WsHandler = {
+  private def createTweetWebsocketHandler(observerId: UUID): WsHandler = {
     val source: Source[Message, ActorRef] =
       Source.actorRef(bufferSize = 1024, overflowStrategy = OverflowStrategy.dropHead)
         .map((s: String) => TextMessage.Strict(s))
@@ -36,11 +36,11 @@ trait WebSocketFactory {
 
     val (streamEntry: ActorRef, messageSource: Source[Message, NotUsed]) = source.toMat(BroadcastHub.sink(1024))(Keep.both).run
 
-    buzzObserverActor ! InitWebsocket(observerId, streamEntry)
+    buzzObserverActor ! InitTweetWebsocket(observerId, streamEntry)
 
     val flow = Flow.fromSinkAndSource(Sink.ignore, messageSource)
 
-    wsHandlers = wsHandlers.updated(observerId, WsHandler(streamEntry, flow))
-    wsHandlers(observerId)
+    tweetWSHandlers = tweetWSHandlers.updated(observerId, WsHandler(streamEntry, flow))
+    tweetWSHandlers(observerId)
   }
 }
