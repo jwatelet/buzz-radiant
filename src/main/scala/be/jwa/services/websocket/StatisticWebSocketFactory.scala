@@ -31,9 +31,10 @@ trait StatisticWebSocketFactory {
   private def createStatisticWebsocketHandler(observerId: UUID): WsHandler = {
 
     val source: Source[Message, ActorRef] =
-      Source.actorRef(bufferSize = 1024, overflowStrategy = OverflowStrategy.dropHead)
+      Source.actorRef(bufferSize = 1024, overflowStrategy = OverflowStrategy.dropBuffer)
         .map((s: String) => TextMessage.Strict(s))
         .keepAlive(maxIdle = 10.seconds, () => TextMessage.Strict("Keep-alive message sent to WebSocket recipient"))
+
 
     val (streamEntry: ActorRef, messageSource: Source[Message, NotUsed]) = source.toMat(BroadcastHub.sink(1024))(Keep.both).run
 
