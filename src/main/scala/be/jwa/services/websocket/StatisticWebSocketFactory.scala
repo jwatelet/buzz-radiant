@@ -50,7 +50,7 @@ trait StatisticWebSocketFactory {
     buzzObserverActor ! InitStatisticWebsocket(observerId, streamEntry)
 
     val flow = Flow.fromSinkAndSource(Sink.ignore, messageSource)
-      .throttle(1, 500.milliseconds, 1, ThrottleMode.Shaping)
+      .throttle(1, 3.seconds, 1, ThrottleMode.Shaping)
 
     statisticWSHandlers = statisticWSHandlers.updated(observerId, WsHandler(streamEntry, flow))
     statisticWSHandlers(observerId)
