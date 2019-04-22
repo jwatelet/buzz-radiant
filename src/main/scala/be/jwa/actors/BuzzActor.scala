@@ -3,7 +3,7 @@ package be.jwa.actors
 import java.util.UUID
 
 import akka.NotUsed
-import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, PoisonPill, Props}
 import akka.pattern.{ask, pipe}
 import akka.stream.scaladsl.{RunnableGraph, Sink, Source}
 import akka.stream.{ActorMaterializer, UniqueKillSwitch}
@@ -34,6 +34,8 @@ object BuzzActor {
 
   case class InitStatisticWebsocket(id: UUID, websocketEntry: ActorRef) extends BuzzMessage
 
+  case class StopStatisticWebsocket(id: UUID) extends BuzzMessage
+
   case class InitTweetWebsocket(id: UUID, websocketEntry: ActorRef) extends BuzzMessage
 
   case object GetAllBuzzObserversIds extends BuzzMessage
@@ -57,17 +59,27 @@ class BuzzActor(implicit val timeout: Timeout, implicit val materializer: ActorM
   private val credentials = new ConfigTwitterCredentials(ConfigFactory.load("twitter.conf"))
   private val graphActor = context.actorOf(TweetGraphActor.props(), "graph-actor")
   private var buzzObserverMap = Map[UUID, BuzzObserver]()
+  private var statisticsSchedulerMap = Map[UUID, Cancellable]()
 
   def receive: Receive = {
 
     case InitStatisticWebsocket(id, websocketEntry) =>
       log.info(s"InitStatisticWebSocket")
-      context.system.scheduler.schedule(0.milliseconds, 500.milliseconds) {
+      val cancellable: Cancellable = context.system.scheduler.schedule(0.milliseconds, 500.milliseconds) {
         (self ? SendMessageToTwitterActor(id, GetStatistics(10)))
           .mapTo[Option[TwitterStatistics]]
           .map(maybeStatistics => maybeStatistics.foreach(s => websocketEntry ! s.toJson.toString()))
       }
+      statisticsSchedulerMap += (id -> cancellable)
       sender() ! s"Initialisation of Statistic for observer : $id"
+
+    case StopStatisticWebsocket(id) =>
+      statisticsSchedulerMap.get(id).foreach { c =>
+        c.cancel()
+        statisticsSchedulerMap -= id
+
+        log.info(s"StopStatisticWebsocket id : $id")
+      }
 
     case CreateBuzzObserver(hashtags) =>
       log.info(s"CreateBuzzObserver : $hashtags")
@@ -105,7 +117,6 @@ class BuzzActor(implicit val timeout: Timeout, implicit val materializer: ActorM
 
     case msg => log.error(s"Unknown received message : $msg")
   }
-
 
   private def deleteBuzzObserver(id: UUID): Unit = {
     buzzObserverMap.get(id).foreach { bo =>

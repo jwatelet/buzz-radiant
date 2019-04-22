@@ -18,6 +18,13 @@ trait WebSocketService extends Directives with TwitterJsonSupport with CorsSuppo
     handleWebSocketMessages(getOrCreateTweetWebsocketHandler(observerId).flow)
   } ~
     path("observers" / JavaUUID / "statistics" / "ws") { observerId =>
-      handleWebSocketMessages(getOrCreateStatisticWebsocketHandler(observerId).flow)
+      get {
+        handleWebSocketMessages(getOrCreateStatisticWebsocketHandler(observerId).flow)
+      } ~ delete {
+        complete {
+          deleteStatisticWebsocketHandler(observerId)
+          s" statistic ws for $observerId stopped"
+        }
+      }
     }
 }

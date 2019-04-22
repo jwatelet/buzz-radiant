@@ -3,11 +3,11 @@ package be.jwa.services.websocket
 import java.util.UUID
 
 import akka.NotUsed
-import akka.actor.ActorRef
+import akka.actor.{ActorRef, Kill}
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.stream.scaladsl.{BroadcastHub, Flow, Keep, Sink, Source}
 import akka.stream.{ActorMaterializer, OverflowStrategy, ThrottleMode}
-import be.jwa.actors.BuzzActor.InitStatisticWebsocket
+import be.jwa.actors.BuzzActor.{InitStatisticWebsocket, StopStatisticWebsocket}
 import be.jwa.services.websocket.TweetWebSocketFactory.WsHandler
 
 import scala.concurrent.duration._
@@ -26,6 +26,15 @@ trait StatisticWebSocketFactory {
 
   def getOrCreateStatisticWebsocketHandler(wsId: UUID): WsHandler = {
     statisticWSHandlers.getOrElse(wsId, createStatisticWebsocketHandler(wsId))
+  }
+
+  def deleteStatisticWebsocketHandler(wsId: UUID): Unit = {
+    statisticWSHandlers.get(wsId).foreach { wsHandler =>
+
+      wsHandler.streamEntry ! Kill
+      buzzObserverActor ! StopStatisticWebsocket(wsId)
+      statisticWSHandlers -= wsId
+    }
   }
 
   private def createStatisticWebsocketHandler(observerId: UUID): WsHandler = {

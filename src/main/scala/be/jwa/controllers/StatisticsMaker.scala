@@ -6,8 +6,8 @@ import org.joda.time.{DateTime, DateTimeZone}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class TwitterStatistics(observedHashtags: Seq[String], tweetCount: Int,
-                             timeStatistics: Seq[TimeStatistic], hashtagStatistics: Seq[HashtagsStatistics])
+case class TwitterStatistics(observedHashtags: Seq[String], tweetCount: Int, timeStatistics: Seq[TimeStatistic],
+                             hashtagStatistics: Seq[HashtagsStatistics])
 
 case class TimeStatistic(date: String, timeInMillis: Long, tweetCount: Int)
 
