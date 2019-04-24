@@ -6,7 +6,7 @@ import akka.NotUsed
 import akka.actor.{ActorRef, Kill}
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.stream.scaladsl.{BroadcastHub, Flow, Keep, Sink, Source}
-import akka.stream.{ActorMaterializer, OverflowStrategy, ThrottleMode}
+import akka.stream.{ActorMaterializer, OverflowStrategy}
 import be.jwa.actors.BuzzActor.{InitStatisticWebsocket, StopStatisticWebsocket}
 import be.jwa.services.websocket.TweetWebSocketFactory.WsHandler
 
@@ -42,7 +42,7 @@ trait StatisticWebSocketFactory {
     val source: Source[Message, ActorRef] =
       Source.actorRef(bufferSize = 1024, overflowStrategy = OverflowStrategy.dropBuffer)
         .map((s: String) => TextMessage.Strict(s))
-        .keepAlive(maxIdle = 10.seconds, () => TextMessage.Strict("Keep-alive message sent to WebSocket recipient"))
+        .keepAlive(maxIdle = 5.seconds, () => TextMessage.Strict("Keep-alive message sent to WebSocket recipient"))
 
 
     val (streamEntry: ActorRef, messageSource: Source[Message, NotUsed]) = source.toMat(BroadcastHub.sink(1024))(Keep.both).run
@@ -50,7 +50,7 @@ trait StatisticWebSocketFactory {
     buzzObserverActor ! InitStatisticWebsocket(observerId, streamEntry)
 
     val flow = Flow.fromSinkAndSource(Sink.ignore, messageSource)
-      .throttle(1, 3.seconds, 1, ThrottleMode.Shaping)
+        .buffer(1,OverflowStrategy.dropHead)
 
     statisticWSHandlers = statisticWSHandlers.updated(observerId, WsHandler(streamEntry, flow))
     statisticWSHandlers(observerId)
