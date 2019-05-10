@@ -68,7 +68,9 @@ class BuzzActor(implicit val timeout: Timeout, implicit val materializer: ActorM
       val cancellable: Cancellable = context.system.scheduler.schedule(0.milliseconds, 10.seconds) {
         (self ? SendMessageToTwitterActor(id, GetStatistics(10)))
           .mapTo[Option[TwitterStatistics]]
-          .map(maybeStatistics => maybeStatistics.foreach(s => websocketEntry ! s.toJson.toString()))
+          .map(maybeStatistics => maybeStatistics.foreach { s =>
+            websocketEntry ! s
+          })
       }
       statisticsSchedulerMap += (id -> cancellable)
       sender() ! s"Initialisation of Statistic for observer : $id"

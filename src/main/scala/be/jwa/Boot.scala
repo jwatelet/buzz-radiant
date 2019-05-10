@@ -15,7 +15,7 @@ import scala.concurrent.duration._
 
 object Boot extends App {
   private val logger = LoggerFactory.getLogger(getClass.getName)
-  private implicit val system: ActorSystem = ActorSystem()
+  private implicit val system: ActorSystem = ActorSystem("buzz-radiant")
   private implicit val materializer: ActorMaterializer = ActorMaterializer()
   private implicit val ec: ExecutionContext = system.dispatcher
   private implicit val timeout: Timeout = Timeout(20.seconds)
