@@ -105,7 +105,7 @@ class BuzzActor(implicit val timeout: Timeout, implicit val materializer: ActorM
 
     case SendMessageToTwitterActor(id, msg) =>
       val response: Future[Option[Any]] = buzzObserverMap.get(id).map(bo => bo.twitterActor ? msg)
-      log.info(s"ask twitter actor $id msg : $msg")
+      log.debug(s"ask twitter actor $id msg : $msg")
       response pipeTo sender
 
     case InitTweetWebsocket(id, wsEntry) =>
