@@ -22,7 +22,7 @@ trait WebSocketService extends Directives with TwitterJsonSupport with CorsSuppo
         handleWebSocketMessages(wsUser(observerId))
       } ~ delete {
         complete {
-          deleteStatisticWebsocketHandler(observerId)
+          deleteStatisticPublisher(observerId)
           s" statistic ws for $observerId stopped"
         }
       }

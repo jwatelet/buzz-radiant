@@ -21,6 +21,6 @@ class StatPublisher extends Actor with ActorLogging {
     case stat: TwitterStatistics =>
 
       mediator ! Publish(topic, stat)
-      log.info("Stat received {} ", stat)
+      log.debug("Stat received {} ", stat)
   }
 }

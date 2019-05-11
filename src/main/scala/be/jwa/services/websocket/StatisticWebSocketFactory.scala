@@ -13,17 +13,11 @@ import be.jwa.actors.WebSocketUser.{ConnectWsHandle, WsHandleDropped}
 import be.jwa.actors.{StatPublisher, WebSocketUser}
 import be.jwa.controllers.TwitterStatistics
 import be.jwa.json.TwitterJsonSupport
-import be.jwa.services.websocket.TweetWebSocketFactory.WsHandler
 import spray.json._
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
-object StatisticWebSocketFactory {
-
-  case class WsHandler(streamEntry: ActorRef, flow: Flow[Message, Message, NotUsed])
-
-}
 
 trait StatisticWebSocketFactory extends TwitterJsonSupport {
   implicit val timeout: Timeout
@@ -31,39 +25,33 @@ trait StatisticWebSocketFactory extends TwitterJsonSupport {
   implicit val ec: ExecutionContext
   val buzzObserverActor: ActorRef
   val system: ActorSystem
-  private var statisticWSHandlers: Map[UUID, WsHandler] = Map()
+
   private var statisticPublisher: Map[UUID, ActorRef] = Map()
 
-  def deleteStatisticWebsocketHandler(wsId: UUID): Unit = {
-    statisticWSHandlers.get(wsId).foreach { wsHandler =>
+  def deleteStatisticPublisher(wsId: UUID): Unit = {
+    statisticPublisher.get(wsId).foreach { publisher =>
 
-      wsHandler.streamEntry ! Kill
+      publisher ! Kill
       buzzObserverActor ! StopStatisticWebsocket(wsId)
-      statisticWSHandlers -= wsId
+      statisticPublisher -= wsId
     }
   }
 
 
-   def wsUser(observerId : UUID): Flow[Message, Message, NotUsed] = {
-    // Create an actor for every WebSocket connection, this will represent the contact point to reach the user
+  def wsUser(observerId: UUID): Flow[Message, Message, NotUsed] = {
     statisticPublisher.getOrElse(observerId, createStatPublisher(observerId))
     val wsUser: ActorRef = system.actorOf(WebSocketUser.props())
 
-    // Integration point between Akka Streams and the above actor
     val sink: Sink[Message, NotUsed] =
       Flow[Message]
-        .to(Sink.actorRef(wsUser, WsHandleDropped)) // connect to the wsUser Actor
+        .to(Sink.actorRef(wsUser, WsHandleDropped))
 
-    // Integration point between Akka Streams and above actor
     val source: Source[Message, NotUsed] =
       Source
         .actorRef(bufferSize = 10, overflowStrategy = OverflowStrategy.dropBuffer)
         .map((c: TwitterStatistics) => TextMessage.Strict(c.toJson.toString()))
         .mapMaterializedValue { wsHandle =>
-          // the wsHandle is the way to talk back to the user, our wsUser actor needs to know about this to send
-          // messages to the WebSocket user
           wsUser ! ConnectWsHandle(wsHandle)
-          // don't expose the wsHandle anymore
           NotUsed
         }
         .keepAlive(maxIdle = 10.seconds, () => TextMessage.Strict("Keep-alive message sent to WebSocket recipient"))

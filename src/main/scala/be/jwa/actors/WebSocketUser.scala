@@ -52,7 +52,7 @@ class WebSocketUser extends Actor with ActorLogging {
 
     case stat: TwitterStatistics =>
       messageWsHandle(stat)
-      log.info("Received TwitterStatistics {} to {}", id, `topic`)
+      log.debug("Received TwitterStatistics {} to {}", id, `topic`)
 
     case _ =>
       log.info("unhandled")
