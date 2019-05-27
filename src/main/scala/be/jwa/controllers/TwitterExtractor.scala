@@ -4,8 +4,24 @@ package be.jwa.controllers
 import twitter4j.{GeoLocation, Place, Status, User}
 
 
+trait Sentiment
+
+object Sentiment {
+
+  case object VeryNegative extends Sentiment
+
+  case object Negative extends Sentiment
+
+  case object Neutral extends Sentiment
+
+  case object Positive extends Sentiment
+
+  case object VeryPositive extends Sentiment
+
+}
+
 case class Tweet(id: Long, createdAt: Long, tweetText: String, hashTags: Seq[String], user: TwitterUser,
-                 place: Option[TwitterPlace], geolocation: Option[TwitterGeolocation], isRetweet: Boolean)
+                 place: Option[TwitterPlace], geolocation: Option[TwitterGeolocation], isRetweet: Boolean, sentiment: Option[Sentiment] = None)
 
 case class TwitterPlace(country: Option[String], countryCode: Option[String], id: Option[String], placeType: Option[String],
                         url: Option[String], streetAddress: Option[String])
