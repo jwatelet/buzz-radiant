@@ -13,6 +13,24 @@ Copy `src/main/resources/twitter.conf.template` to `src/main/resources/twitter.c
 Run with `sbt run`
 
 
+## Get Started ##
+
+##### Init the observer
+
+`curl -X POST http://localhost:8080/observers  -d '["#Scala"]'`
+   
+##### Get all observersIds
+  
+`curl -X GET http://localhost:8080/observers`
+
+##### Get Statistics from the observer
+
+`curl -X GET  'http://localhost:8080/observers/{observerId}/tweets/statistics`
+
+##### Get statistics from the websocket
+
+`ws://localhost:8080/observers/{observerId}/tweets/statistics/ws`
+
 ## TODO ##
 
 - [X] sentiment detection V1
