@@ -17,7 +17,7 @@ Run with `sbt run`
 
 ##### Init the observer
 
-`curl -X POST http://localhost:8080/observers  -d '["#Scala"]'`
+`curl -X POST http://localhost:8080/observers  -d '["#Scala"]`
    
 ##### Get all observersIds
   
