@@ -7,7 +7,7 @@ import org.joda.time.{DateTime, DateTimeZone}
 import scala.concurrent.{ExecutionContext, Future}
 
 case class TwitterStatistics(observedHashtags: Seq[String], tweetCount: Int, timeStatistics: Seq[TimeStatistic],
-                             hashtagStatistics: Seq[HashtagsStatistics])
+                             sentimentStatistics: Map[String, Int], hashtagStatistics: Seq[HashtagsStatistics])
 
 case class TimeStatistic(date: String, timeInMillis: Long, tweetCount: Int)
 
@@ -17,7 +17,7 @@ trait StatisticsMaker {
   val hashtags: Seq[String]
   implicit val ec: ExecutionContext
 
-  def makeStatistics(lastTweets: List[Tweet], timeCount: Map[Long, Int], tweetCount: Int, timeWindow: Int): Future[TwitterStatistics] = {
+  def makeStatistics(lastTweets: List[Tweet], timeCount: Map[Long, Int], sentimentCount: Map[String, Int], tweetCount: Int, timeWindow: Int): Future[TwitterStatistics] = {
 
     val eventualTimeStatistics = Future(makeTimeStatistic(timeCount, timeWindow))
     val eventualTweetCount = Future(tweetCount)
@@ -28,7 +28,7 @@ trait StatisticsMaker {
       tweetCount <- eventualTweetCount
       hashtagsStatistics <- eventualHashtagsStatistics
     } yield {
-      TwitterStatistics(hashtags, tweetCount, timeStatistics, hashtagsStatistics)
+      TwitterStatistics(hashtags, tweetCount, timeStatistics, sentimentCount, hashtagsStatistics)
     }
   }
 
@@ -63,9 +63,15 @@ trait StatisticsMaker {
       .getTime
   }
 
-  protected def addCountToTimeMapMap(tweet: Tweet, timeCountMap: Map[Long, Int], timeWindow: Int): (Long, Int) = {
+  protected def addCountToTimeMap(tweet: Tweet, timeCountMap: Map[Long, Int], timeWindow: Int): (Long, Int) = {
     val roundedTime = roundTime(tweet.createdAt, timeWindow)
     val count = timeCountMap.getOrElse(roundedTime, 0) + 1
     roundedTime -> count
+  }
+
+  protected def addCountToSentimentMap(tweet: Tweet, sentimentCountMap: Map[String, Int]): (String, Int) = {
+    val sentimentString = tweet.sentiment.getOrElse(Sentiment.Undefined).toString
+    val count = sentimentCountMap.getOrElse(sentimentString, 0) + 1
+    sentimentString -> count
   }
 }

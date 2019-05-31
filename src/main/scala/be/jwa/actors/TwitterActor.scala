@@ -39,6 +39,7 @@ class TwitterActor(val hashtags: Seq[String])(implicit val ec: ExecutionContext)
 
   val tweetQueue = new FiniteQueue[Tweet](10000)
   var timeCount: Map[Long, Int] = Map()
+  var sentimentCount: Map[String, Int] = Map()
   var tweetCount: Int = 0
 
 
@@ -47,12 +48,13 @@ class TwitterActor(val hashtags: Seq[String])(implicit val ec: ExecutionContext)
     case AddTweet(tweet: Tweet) =>
       tweetQueue.enqueue(tweet)
       tweetCount += 1
-      timeCount += addCountToTimeMapMap(tweet, timeCount, 10)
+      timeCount += addCountToTimeMap(tweet, timeCount, 10)
+      sentimentCount += addCountToSentimentMap(tweet, sentimentCount)
       log.debug(s"AddTweet : ${tweet.id} Added")
 
     case GetStatistics(timeWindow) =>
       log.debug(s"GetStatistics")
-      makeStatistics(tweetQueue.toList, timeCount, tweetCount, timeWindow) pipeTo sender()
+      makeStatistics(tweetQueue.toList, timeCount, sentimentCount, tweetCount, timeWindow) pipeTo sender()
 
     case GetTweets =>
       log.info(s"GetTweets")

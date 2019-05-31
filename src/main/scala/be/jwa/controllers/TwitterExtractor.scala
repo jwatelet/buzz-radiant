@@ -18,6 +18,8 @@ object Sentiment {
 
   case object VeryPositive extends Sentiment
 
+  case object Undefined extends Sentiment
+
 }
 
 case class Tweet(id: Long, createdAt: Long, tweetText: String, hashTags: Seq[String], user: TwitterUser,
@@ -38,6 +40,7 @@ trait TwitterExtractor {
     val id = status.getId
     val createdAt = status.getCreatedAt.getTime
     val tweetText = status.getText
+
     val hashTags = status.getHashtagEntities.toSeq.map(ht => ht.getText.toLowerCase)
     val isRetweet = status.isRetweet
 

@@ -8,7 +8,7 @@ import akka.stream.{ClosedShape, KillSwitches, UniqueKillSwitch}
 import akka.util.Timeout
 import be.jwa.actors.TwitterActor.AddTweet
 import be.jwa.controllers.Tweet
-import be.jwa.flows.{ParserStatus, TweetLog}
+import be.jwa.flows.{AddSentiment, ParserStatus, TweetLog}
 import twitter4j.Status
 
 trait TwitterGraphMaker {
@@ -21,7 +21,8 @@ trait TwitterGraphMaker {
       killSwitch =>
         import akka.stream.scaladsl.GraphDSL.Implicits._
 
-        twitterSource ~> ParserStatus.parse ~> TweetLog.info ~> killSwitch ~> Sink.foreach[Tweet](t => tweetActor ? AddTweet(t))
+        twitterSource ~> ParserStatus.parse ~> AddSentiment.addSentiment ~> TweetLog.info ~>
+          killSwitch ~> Sink.foreach[Tweet](t => tweetActor ? AddTweet(t))
 
         ClosedShape
     })

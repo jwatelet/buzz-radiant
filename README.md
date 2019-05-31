@@ -14,3 +14,8 @@ Run with `sbt run`
 
 
 ## TODO ##
+
+- [X] sentiment detection V1
+- [ ] Sentiment detection V2
+- [ ] Top Tweet user for a buzz
+- [ ] Top Hashtags

@@ -8,8 +8,8 @@ import be.jwa.controllers.{SentimentAnalyzer, Tweet, TwitterUser}
 import be.jwa.flows.AddSentiment
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
-import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext}
 
 class SentimentTest() extends TestKit(ActorSystem("sentiments-test")) with ImplicitSender
   with WordSpecLike with Matchers with BeforeAndAfterAll with SentimentAnalyzer {
@@ -41,7 +41,7 @@ class SentimentTest() extends TestKit(ActorSystem("sentiments-test")) with Impli
   "The AddSentiment Flow" must {
     "add sentiment to a Tweet object" in {
       val user = TwitterUser(0L, "", None, "", 0, 0, None, 0L)
-      val tweet = Tweet(0L, 0L, "I'm soo happy to read that ! Great news !!!", Nil, user, None, None, false, None)
+      val tweet = Tweet(0L, 0L, "I'm soo happy to read that ! Great news !!!", Nil, user, None, None, isRetweet = false, None)
       val addSentimentFlow = AddSentiment.addSentiment
 
       val future = Source.single(tweet).via(addSentimentFlow).runWith(Sink.head)
